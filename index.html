@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>あやか式｜週間献立メーカー</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=Playfair+Display:ital@1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --cream: #FAF7F2; --warm: #F5EFE6; --accent: #C4956A;
+    --accent-light: #E8D5C0; --dark: #2C2418; --mid: #7A6A58;
+    --success: #6B9E6E; --border: #E0D5C8;
+    --green: #E8F5E9; --green-border: #A5D6A7;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Sans JP', sans-serif; background: var(--cream); color: var(--dark); min-height: 100vh; padding-bottom: 60px; }
+  header { background: var(--dark); color: var(--cream); padding: 20px 24px 16px; text-align: center; position: sticky; top: 0; z-index: 100; }
+  header .logo { font-family: 'Playfair Display', serif; font-style: italic; font-size: 13px; color: var(--accent); letter-spacing: 2px; margin-bottom: 4px; }
+  header h1 { font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+  .step-indicator { display: flex; justify-content: center; gap: 8px; padding: 16px 24px; background: var(--warm); border-bottom: 1px solid var(--border); }
+  .step-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--border); transition: all 0.3s; }
+  .step-dot.active { background: var(--accent); transform: scale(1.3); }
+  .step-dot.done { background: var(--success); }
+  .screen { display: none; padding: 24px; animation: fadeIn 0.4s ease; }
+  .screen.active { display: block; }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+  .screen-title { font-size: 20px; font-weight: 700; margin-bottom: 6px; }
+  .screen-sub { font-size: 13px; color: var(--mid); margin-bottom: 24px; line-height: 1.6; }
+  .form-group { margin-bottom: 20px; }
+  label { display: block; font-size: 13px; font-weight: 500; color: var(--mid); margin-bottom: 8px; letter-spacing: 0.5px; }
+  input[type="number"] { width: 100%; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 16px; font-family: 'Noto Sans JP', sans-serif; background: white; color: var(--dark); transition: border-color 0.2s; -webkit-appearance: none; }
+  input[type="number"]:focus { outline: none; border-color: var(--accent); }
+  .input-unit { position: relative; }
+  .input-unit input { padding-right: 50px; }
+  .input-unit span { position: absolute; right: 16px; top: 50%; transform: translateY(-50%); font-size: 14px; color: var(--mid); }
+  .radio-group { display: flex; gap: 8px; flex-wrap: wrap; }
+  .radio-btn { flex: 1; min-width: 60px; }
+  .radio-btn input { display: none; }
+  .radio-btn label { display: block; text-align: center; padding: 12px 6px; border: 1.5px solid var(--border); border-radius: 12px; font-size: 12px; font-weight: 500; color: var(--mid); background: white; cursor: pointer; transition: all 0.2s; margin: 0; line-height: 1.4; }
+  .radio-btn input:checked + label { border-color: var(--accent); background: var(--accent-light); color: var(--dark); }
+  .note-box { font-size: 11px; color: var(--mid); margin-top: 8px; line-height: 1.6; background: var(--warm); border-radius: 8px; padding: 8px 12px; }
+  .card-options { display: flex; flex-direction: column; gap: 8px; }
+  .card-option input { display: none; }
+  .card-option label { display: flex; align-items: flex-start; gap: 14px; padding: 14px 16px; border: 1.5px solid var(--border); border-radius: 12px; background: white; cursor: pointer; transition: all 0.2s; margin: 0; }
+  .card-option input:checked + label { border-color: var(--accent); background: var(--accent-light); }
+  .card-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+  .card-text .name { font-size: 14px; font-weight: 700; color: var(--dark); }
+  .card-text .desc { font-size: 11px; color: var(--mid); margin-top: 3px; line-height: 1.5; }
+  .activity-option { width: 100%; margin-bottom: 8px; }
+  .activity-option input { display: none; }
+  .activity-option label { display: flex; align-items: flex-start; gap: 12px; padding: 12px 16px; border: 1.5px solid var(--border); border-radius: 12px; background: white; cursor: pointer; transition: all 0.2s; margin: 0; }
+  .activity-option input:checked + label { border-color: var(--accent); background: var(--accent-light); }
+  .activity-icon { font-size: 20px; margin-top: 2px; flex-shrink: 0; }
+  .activity-text .name { font-size: 13px; font-weight: 700; color: var(--dark); }
+  .activity-text .desc { font-size: 11px; color: var(--mid); margin-top: 3px; line-height: 1.5; }
+  .btn-primary { width: 100%; padding: 16px; background: var(--dark); color: var(--cream); border: none; border-radius: 14px; font-size: 15px; font-weight: 700; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; transition: all 0.2s; letter-spacing: 1px; margin-top: 8px; }
+  .btn-primary:active { transform: scale(0.98); }
+  .btn-secondary { width: 100%; padding: 14px; background: transparent; color: var(--mid); border: 1.5px solid var(--border); border-radius: 14px; font-size: 14px; font-family: 'Noto Sans JP', sans-serif; cursor: pointer; margin-top: 10px; }
+  .result-summary { background: var(--dark); color: var(--cream); border-radius: 16px; padding: 20px; margin-bottom: 16px; }
+  .result-summary .label { font-size: 11px; color: var(--accent); letter-spacing: 1px; margin-bottom: 4px; }
+  .calorie-big { font-size: 42px; font-weight: 700; line-height: 1; }
+  .calorie-big span { font-size: 16px; font-weight: 400; }
+  .calorie-breakdown { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); }
+  .breakdown-item { text-align: center; }
+  .breakdown-item .val { font-size: 18px; font-weight: 700; }
+  .breakdown-item .lbl { font-size: 10px; color: #aaa; margin-top: 2px; line-height: 1.4; }
+  .meal-split { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 14px; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.1); }
+  .split-item { text-align: center; }
+  .split-item .s-val { font-size: 14px; font-weight: 700; }
+  .split-item .s-lbl { font-size: 10px; color: #aaa; margin-top: 2px; }
+  .warning-box { background: #FEF3C7; border: 1px solid #F59E0B; border-radius: 12px; padding: 12px 16px; margin-bottom: 16px; font-size: 12px; color: #92400E; line-height: 1.6; }
+  .info-box { background: #FFF8F0; border: 1px solid var(--accent-light); border-radius: 12px; padding: 14px 16px; margin-bottom: 16px; font-size: 12px; color: var(--mid); line-height: 1.8; }
+  .info-box strong { color: var(--dark); }
+  .menu-type-tabs { display: flex; gap: 6px; margin-bottom: 16px; }
+  .menu-type-tab { flex: 1; padding: 10px 4px; border-radius: 12px; font-size: 11px; font-weight: 700; border: 1.5px solid var(--border); background: white; color: var(--mid); cursor: pointer; text-align: center; transition: all 0.2s; line-height: 1.4; }
+  .menu-type-tab.active { background: var(--dark); color: var(--cream); border-color: var(--dark); }
+  .fiber-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 4px; vertical-align: middle; white-space: nowrap; }
+  .fiber-s { background: #E8F5E9; color: #2E7D32; }
+  .fiber-i { background: #FFF3E0; color: #E65100; }
+  .fiber-b { background: #E3F2FD; color: #1565C0; }
+  .ferment-badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 4px; vertical-align: middle; background: #FCE4EC; color: #C2185B; white-space: nowrap; }
+  .fiber-legend { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; align-items: center; }
+  .week-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
+  .week-tabs::-webkit-scrollbar { display: none; }
+  .day-tab { flex-shrink: 0; padding: 8px 14px; border-radius: 20px; font-size: 13px; font-weight: 500; border: 1.5px solid var(--border); background: white; color: var(--mid); cursor: pointer; transition: all 0.2s; }
+  .day-tab.active { background: var(--dark); color: var(--cream); border-color: var(--dark); }
+  .meal-card { background: white; border-radius: 16px; padding: 16px 18px; margin-bottom: 8px; border: 1px solid var(--border); }
+  .meal-header { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .meal-icon { font-size: 16px; flex-shrink: 0; }
+  .meal-type-label { font-size: 11px; font-weight: 700; color: var(--mid); letter-spacing: 0.5px; }
+  .meal-cal-badge { margin-left: auto; font-size: 12px; font-weight: 700; color: white; background: var(--accent); padding: 3px 10px; border-radius: 20px; white-space: nowrap; }
+  .meal-name { font-size: 16px; font-weight: 700; color: var(--dark); margin-bottom: 12px; line-height: 1.4; }
+  .badge { display: inline-block; font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 6px; vertical-align: middle; }
+  .badge-quick { background: #E8F5E9; color: #2E7D32; }
+  .badge-conv  { background: #E8EAF6; color: #3949AB; }
+  .badge-lazy  { background: #FFF3E0; color: #E65100; }
+  .ingredients { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ingredient-tag { display: flex; align-items: center; gap: 4px; background: var(--warm); border: 1px solid var(--border); border-radius: 20px; padding: 4px 10px; font-size: 12px; color: var(--dark); }
+  .ingredient-amount { font-size: 11px; color: var(--mid); }
+  .gut-tip { background: var(--green); border: 1px solid var(--green-border); border-radius: 12px; padding: 12px 16px; margin-bottom: 12px; font-size: 13px; line-height: 1.7; color: var(--dark); }
+  .gut-tip .gt-label { font-size: 11px; font-weight: 700; color: #2E7D32; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .snack-note { background: #FFF8F0; border: 1px solid var(--accent-light); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; font-size: 13px; color: var(--dark); line-height: 1.6; }
+  .snack-note .snack-title { font-weight: 700; color: var(--accent); margin-bottom: 4px; font-size: 12px; }
+  .ayaka-tip { background: var(--warm); border-left: 3px solid var(--accent); border-radius: 0 12px 12px 0; padding: 14px 16px; margin-bottom: 12px; }
+  .ayaka-tip .tip-label { font-size: 11px; color: var(--accent); font-weight: 700; letter-spacing: 1px; margin-bottom: 6px; }
+  .ayaka-tip p { font-size: 13px; line-height: 1.7; color: var(--dark); }
+  .loading { text-align: center; padding: 60px 24px; }
+  .loading-spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading p { font-size: 14px; color: var(--mid); }
+  .error-msg { background: #FFF0F0; border: 1px solid #FFCCCC; border-radius: 12px; padding: 14px 16px; font-size: 13px; color: #C0392B; margin-bottom: 16px; display: none; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">ayaka's method</div>
+  <h1>週間献立メーカー</h1>
+</header>
+<div class="step-indicator">
+  <div class="step-dot active" id="dot1"></div>
+  <div class="step-dot" id="dot2"></div>
+  <div class="step-dot" id="dot3"></div>
+</div>
+
+<div class="screen active" id="screen1">
+  <div class="screen-title">基本情報を入力</div>
+  <div class="screen-sub">あなたに合ったカロリーと献立を計算します</div>
+  <div class="error-msg" id="error1"></div>
+  <div class="form-group">
+    <label>性別</label>
+    <div class="radio-group">
+      <div class="radio-btn"><input type="radio" name="gender" id="female" value="female" checked><label for="female">女性</label></div>
+      <div class="radio-btn"><input type="radio" name="gender" id="male" value="male"><label for="male">男性</label></div>
+    </div>
+  </div>
+  <div class="form-group">
+    <label>年齢</label>
+    <div class="input-unit"><input type="number" id="age" placeholder="30" min="15" max="80"><span>歳</span></div>
+  </div>
+  <div class="form-group">
+    <label>身長</label>
+    <div class="input-unit"><input type="number" id="height" placeholder="160" min="140" max="200"><span>cm</span></div>
+  </div>
+  <div class="form-group">
+    <label>現在の体重</label>
+    <div class="input-unit"><input type="number" id="weight" placeholder="65" min="30" max="200"><span>kg</span></div>
+  </div>
+  <div class="form-group">
+    <label>目標体重</label>
+    <div class="input-unit"><input type="number" id="target" placeholder="55" min="30" max="200"><span>kg</span></div>
+  </div>
+  <div class="form-group">
+    <label>筋トレ・運動習慣</label>
+    <div class="radio-group">
+      <div class="radio-btn"><input type="radio" name="training" id="train_yes" value="yes" checked><label for="train_yes">筋トレ<br>あり</label></div>
+      <div class="radio-btn"><input type="radio" name="training" id="train_no" value="no"><label for="train_no">筋トレ<br>なし</label></div>
+    </div>
+    <div class="note-box">筋トレありはタンパク質×2.2g、なしは×1.5gで計算します✊<br>※タンパク質を多く摂りすぎると腎臓に負担がかかる場合があります。腎機能に不安がある方は医師にご相談ください。</div>
+  </div>
+  <div class="form-group">
+    <label>授乳中ですか？</label>
+    <div class="radio-group">
+      <div class="radio-btn"><input type="radio" name="nursing" id="nursing_no" value="no" checked><label for="nursing_no">授乳<br>していない</label></div>
+      <div class="radio-btn"><input type="radio" name="nursing" id="nursing_yes" value="yes"><label for="nursing_yes">授乳中</label></div>
+    </div>
+    <div class="note-box">🤱 授乳中は1日+350kcalの付加量が必要です。授乳中を選択すると摂取目標カロリーに自動で加算します。<br>また授乳中は急激な減量（−500kcal以上）は乳量減少・栄養不足のリスクがあるため、ゆるめ（−300kcal）を推奨します。</div>
+  </div>
+  <div class="form-group">
+    <label>主食の種類</label>
+    <div class="radio-group">
+      <div class="radio-btn"><input type="radio" name="rice" id="rice_white" value="white" checked><label for="rice_white">白米</label></div>
+      <div class="radio-btn"><input type="radio" name="rice" id="rice_brown" value="brown"><label for="rice_brown">玄米</label></div>
+      <div class="radio-btn"><input type="radio" name="rice" id="rice_mochi_white" value="mochi_white"><label for="rice_mochi_white">もち麦<br>入り白米</label></div>
+      <div class="radio-btn"><input type="radio" name="rice" id="rice_mochi_brown" value="mochi_brown"><label for="rice_mochi_brown">もち麦<br>入り玄米</label></div>
+    </div>
+    <div class="note-box">玄米・もち麦入りは食物繊維が豊富で血糖値の上昇がゆるやか🌿</div>
+  </div>
+  <button class="btn-primary" onclick="goScreen2()">次へ →</button>
+</div>
+
+<div class="screen" id="screen2">
+  <div class="screen-title">活動量と減量ペースを選択</div>
+  <div class="screen-sub">無理のないペースが長続きのコツだよ</div>
+  <div class="form-group">
+    <label>活動量</label>
+    <div class="activity-option"><input type="radio" name="activity" id="act1" value="1.2" checked><label for="act1"><span class="activity-icon">🛋️</span><div class="activity-text"><div class="name">かなり低い（×1.2）</div><div class="desc">ほぼ一日中座っている・デスクワーク・運動習慣まったくなし</div></div></label></div>
+    <div class="activity-option"><input type="radio" name="activity" id="act2" value="1.375"><label for="act2"><span class="activity-icon">🪑</span><div class="activity-text"><div class="name">低い（×1.375）</div><div class="desc">主にデスクワーク・週1〜2回の軽い運動（ウォーキング・ストレッチ等）</div></div></label></div>
+    <div class="activity-option"><input type="radio" name="activity" id="act3" value="1.55"><label for="act3"><span class="activity-icon">🚶</span><div class="activity-text"><div class="name">普通（×1.55）</div><div class="desc">週3〜5回の運動習慣あり・立ち仕事メイン・通勤で毎日30分以上歩く</div></div></label></div>
+    <div class="activity-option"><input type="radio" name="activity" id="act4" value="1.725"><label for="act4"><span class="activity-icon">🏃</span><div class="activity-text"><div class="name">高い（×1.725）</div><div class="desc">週6〜7回の本格的な運動・肉体労働</div></div></label></div>
+    <div class="activity-option"><input type="radio" name="activity" id="act5" value="1.9"><label for="act5"><span class="activity-icon">💪</span><div class="activity-text"><div class="name">かなり高い（×1.9）</div><div class="desc">毎日2回以上のトレーニング・アスリート・重労働が1日中続く仕事</div></div></label></div>
+  </div>
+  <div class="form-group">
+    <label>減量ペース</label>
+    <div class="card-options">
+      <div class="card-option"><input type="radio" name="deficit" id="def_gentle" value="300"><label for="def_gentle"><span class="card-icon">🌱</span><div class="card-text"><div class="name">ゆるめ（−300kcal）</div><div class="desc">月約1.2kg減ペース。無理なく長続きさせたい人向け</div></div></label></div>
+      <div class="card-option"><input type="radio" name="deficit" id="def_standard" value="500" checked><label for="def_standard"><span class="card-icon">🔥</span><div class="card-text"><div class="name">標準（−500kcal）</div><div class="desc">月約2kg減ペース。バランスよく痩せたい人向け</div></div></label></div>
+      <div class="card-option"><input type="radio" name="deficit" id="def_hard" value="700"><label for="def_hard"><span class="card-icon">💪</span><div class="card-text"><div class="name">ガチ（−700kcal）</div><div class="desc">月約2.8kg減ペース。本気で絞りたい人向け。筋肉量の維持に注意</div></div></label></div>
+    </div>
+    <div class="note-box">⚠️ 体重の3〜5%以上を急激に落とすと筋肉も一緒に落ちてリバウンドしやすくなるよ</div>
+  </div>
+  <button class="btn-primary" onclick="generateMenu()">献立を作る</button>
+  <button class="btn-secondary" onclick="goScreen(1)">← 戻る</button>
+</div>
+
+<div class="screen" id="screen3">
+  <div id="loading" class="loading"><div class="loading-spinner"></div><p>あなた専用の献立を作成中...</p></div>
+  <div id="result-content" style="display:none"></div>
+</div>
+
+<script>
+let userData = {};
+let weekMenu = { normal: [], convenience: [], lazy: [] };
+let currentType = 'normal';
+
+const days = ['月曜日','火曜日','水曜日','木曜日','金曜日','土曜日','日曜日'];
+const dayShort = ['月','火','水','木','金','土','日'];
+const RATIO = { breakfast: 0.30, lunch: 0.35, dinner: 0.25, snack: 0.10 };
+
+const RICE_CONFIG = {
+  white:       { name: '白米',          calPer100: 168, fiber: null },
+  brown:       { name: '玄米',          calPer100: 165, fiber: 'i'  },
+  mochi_white: { name: 'もち麦入りご飯', calPer100: 168, fiber: 's'  },
+  mochi_brown: { name: 'もち麦入り玄米', calPer100: 165, fiber: 'b'  },
+};
+
+const CAL = {
+  rice: 168, oatmeal: 380, bread_whole: 264,
+  chicken_breast: 125, chicken_sasami: 110, ground_chicken: 110, pork_loin: 190,
+  salmon: 150, mackerel: 220, mackerel_can: 174, tuna_can: 71, shrimp: 90, salmon_flake: 186,
+  natto: 200, tofu_silk: 56, tofu_firm: 72, tofu_hamburg: 130,
+  egg: 154, yogurt_plain: 62,
+  broccoli: 33, spinach: 20, komatsuna: 14, chingensai: 12,
+  lettuce: 12, cucumber: 14, tomato: 20, burdock: 58, sweet_potato: 132,
+  cabbage: 23, hakusai: 14, bean_sprouts: 15, leek: 31, paprika: 30,
+  mushroom_mix: 25, shiitake: 23,
+  wakame_wet: 16, hijiki_cooked: 70, hijiki_dry: 180,
+  banana: 89, avocado: 180, apple: 46, kiwi: 45,
+  konjac: 5, miso_soup: 15, kimchi: 31, nuts: 600,
+};
+
+function goScreen(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById('screen' + n).classList.add('active');
+  document.querySelectorAll('.step-dot').forEach((d, i) => {
+    d.classList.remove('active', 'done');
+    if (i + 1 < n) d.classList.add('done');
+    else if (i + 1 === n) d.classList.add('active');
+  });
+  window.scrollTo(0, 0);
+}
+
+function goScreen2() {
+  const age = parseInt(document.getElementById('age').value);
+  const height = parseInt(document.getElementById('height').value);
+  const weight = parseFloat(document.getElementById('weight').value);
+  const target = parseFloat(document.getElementById('target').value);
+  const err = document.getElementById('error1');
+  if (!age || !height || !weight || !target) { err.textContent = '全項目を入力してください'; err.style.display = 'block'; return; }
+  if (target >= weight) { err.textContent = '目標体重は現在の体重より少なく設定してください'; err.style.display = 'block'; return; }
+  err.style.display = 'none';
+  userData = { age, height, weight, target };
+  goScreen(2);
+}
+
+function calcCalories() {
+  const genderVal  = document.querySelector('input[name="gender"]:checked').value;
+  const activity   = parseFloat(document.querySelector('input[name="activity"]:checked').value);
+  const riceType   = document.querySelector('input[name="rice"]:checked').value;
+  const training   = document.querySelector('input[name="training"]:checked').value;
+  const nursing    = document.querySelector('input[name="nursing"]:checked').value;
+  const deficitVal = parseInt(document.querySelector('input[name="deficit"]:checked').value);
+  const { age, height, weight } = userData;
+
+  // ① 基礎代謝（Mifflin-St Jeor式）
+  const bmr = Math.round(genderVal === 'female'
+    ? 10 * weight + 6.25 * height - 5 * age - 161
+    : 10 * weight + 6.25 * height - 5 * age + 5);
+  const tdee = Math.round(bmr * activity);
+
+  // ② 授乳中は+350kcal付加（厚生労働省推奨値）
+  const nursingBonus = nursing === 'yes' ? 350 : 0;
+
+  // ③ 摂取目標 = 総消費 - 赤字 + 授乳付加
+  const rawDiet = tdee - deficitVal + nursingBonus;
+  const belowBmr = rawDiet < bmr;
+  const dietCalorie = belowBmr ? bmr : rawDiet;
+
+  // ④ 体重比チェック：1日の赤字が体重×3%/月を超えないか
+  const safeDeficitMax = Math.round(7200 * (weight * 0.03) / 30);
+  const overSafeLimit = deficitVal > safeDeficitMax;
+  const nursingHighDeficit = nursing === 'yes' && deficitVal >= 500;
+
+  const lbm = Math.round(weight * (genderVal === 'female' ? 0.7 : 0.8));
+  const proteinRate = training === 'yes' ? 2.2 : 1.5;
+  const protein    = Math.round(lbm * proteinRate);
+  const proteinCal = protein * 4;
+
+  // ⑤ 脂質：25%（下限なし。低カロリー帯でも炭水化物を極端に削らない）
+  const fatCal = Math.round(dietCalorie * 0.25);
+  const fat    = Math.round(fatCal / 9);
+
+  // ⑥ 炭水化物：残り
+  const carbCal = Math.max(dietCalorie - proteinCal - fatCal, 0);
+  const carb    = Math.round(carbCal / 4);
+
+  const mealCal = {
+    breakfast: Math.round(dietCalorie * RATIO.breakfast),
+    lunch:     Math.round(dietCalorie * RATIO.lunch),
+    dinner:    Math.round(dietCalorie * RATIO.dinner),
+    snack:     Math.round(dietCalorie * RATIO.snack),
+  };
+  const deficit   = tdee - dietCalorie + nursingBonus;
+  const monthLoss = Math.round(deficit * 30 / 7200 * 10) / 10;
+
+  return { bmr, tdee, dietCalorie, protein, proteinCal, fat, fatCal, carb, carbCal,
+           lbm, deficit, monthLoss, gender: genderVal, mealCal, riceType, belowBmr,
+           training, deficitVal, nursing, nursingBonus, overSafeLimit, safeDeficitMax, nursingHighDeficit };
+}
+
+// ===================================================================
+// 献立データ（通常・コンビニ・ズボラ）
+// ===================================================================
+const DB = {
+  breakfast: {
+    normal: [
+      { name: '納豆ご飯＋わかめ味噌汁', quick: true, items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, fixed: true, display: '1パック（50g）' },
+        { name: 'わかめ味噌汁', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+        { name: 'ゆで卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
+      ], gut: '納豆＋味噌は最強の発酵コンビ。もち麦入りにすれば水溶性食物繊維もバッチリだよ✊' },
+      { name: 'オートミール＋ヨーグルト', quick: true, items: [
+        { name: 'オートミール', gBase: 50, calPer100: CAL.oatmeal, fiber: 's', isOatmeal: true },
+        { name: 'ギリシャヨーグルト（無糖）', gBase: 100, calPer100: CAL.yogurt_plain, ferment: true },
+        { name: 'バナナ', gBase: 150, calPer100: CAL.banana, fiber: 's', fixed: true, display: '1本（150g）' },
+        { name: 'ゆで卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
+      ], gut: 'オートミール＋バナナ（水溶性）＋ヨーグルト（発酵）の腸活トリプルコンビ。電子レンジ2分でできるよ🌿' },
+      { name: 'ご飯＋鮭フレーク＋味噌汁', quick: true, items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: '鮭フレーク', gBase: 30, calPer100: CAL.salmon_flake },
+        { name: 'わかめ味噌汁', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+        { name: 'ゆで卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
+      ], gut: '鮭フレークで手軽にタンパク質補給。わかめ味噌汁で発酵＋水溶性食物繊維も摂れるよ' },
+      { name: 'ご飯＋卵かけ＋きのこ味噌汁', quick: true, items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: '卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
+        { name: 'きのこ味噌汁', gBase: 150, calPer100: 18, fiber: 'b', ferment: true, fixed: true, display: '1杯' },
+        { name: '海苔', gBase: 3, calPer100: 167, fixed: true, display: '1枚' },
+      ], gut: 'きのこ味噌汁で水溶性・不溶性両方の食物繊維が摂れる。卵でタンパク質も補給できるよ' },
+      { name: 'バナナヨーグルト＋ゆで卵', quick: true, items: [
+        { name: 'ギリシャヨーグルト（無糖）', gBase: 150, calPer100: CAL.yogurt_plain, ferment: true },
+        { name: 'バナナ', gBase: 150, calPer100: CAL.banana, fiber: 's', fixed: true, display: '1本（150g）' },
+        { name: 'ゆで卵', gBase: 100, calPer100: CAL.egg, fixed: true, display: '2個' },
+        { name: '素焼きナッツ', gBase: 15, calPer100: CAL.nuts },
+      ], gut: '調理不要の超時短朝食。ヨーグルト（発酵）＋バナナ（水溶性食物繊維）で腸活もできるよ✨' },
+      { name: '全粒粉トースト＋納豆＋ヨーグルト', quick: true, items: [
+        { name: '全粒粉パン', gBase: 90, calPer100: CAL.bread_whole, fiber: 'i', fixed: true, display: '2枚（90g）' },
+        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, fixed: true, display: '1パック' },
+        { name: 'ゆで卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
+        { name: 'ギリシャヨーグルト（無糖）', gBase: 80, calPer100: CAL.yogurt_plain, ferment: true },
+      ], gut: '全粒粉の不溶性＋納豆の水溶性でバランスよく食物繊維が摂れる。ヨーグルトで発酵もプラスだよ' },
+      { name: 'オートミール雑炊', quick: true, items: [
+        { name: 'オートミール', gBase: 50, calPer100: CAL.oatmeal, fiber: 's', isOatmeal: true },
+        { name: '卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
+        { name: 'わかめ', gBase: 15, calPer100: CAL.wakame_wet, fiber: 's' },
+        { name: '顆粒だし＋醤油', gBase: 5, calPer100: 50, fixed: true, display: '適量' },
+      ], gut: '電子レンジ3分で完成。わかめとオートミールのダブル水溶性食物繊維で腸を朝から整えてくれるよ' },
+    ],
+    convenience: [
+      { name: 'コンビニ朝食①おにぎり＋サラダチキン', conv: true, items: [
+        { name: 'おにぎり（鮭or昆布）', gBase: 100, calPer100: 168, fixed: true, display: '1個（約100g）' },
+        { name: 'サラダチキン', gBase: 100, calPer100: CAL.chicken_breast, fixed: true, display: '1袋（100g）' },
+        { name: 'ギリシャヨーグルト（市販）', gBase: 100, calPer100: CAL.yogurt_plain, ferment: true, fixed: true, display: '1個' },
+        { name: 'バナナ', gBase: 150, calPer100: CAL.banana, fiber: 's', fixed: true, display: '1本' },
+      ], gut: 'コンビニで全部揃う。ヨーグルト（発酵）＋バナナ（水溶性食物繊維）は腸活的にも合格点だよ✊' },
+      { name: 'コンビニ朝食②ゆで卵＋豆乳', conv: true, items: [
+        { name: 'ゆで卵（コンビニ）', gBase: 100, calPer100: CAL.egg, fixed: true, display: '2個' },
+        { name: '豆乳（無調整）', gBase: 200, calPer100: 46, fixed: true, display: '1本（200ml）' },
+        { name: 'バナナ', gBase: 150, calPer100: CAL.banana, fiber: 's', fixed: true, display: '1本' },
+        { name: 'おにぎり（梅）', gBase: 100, calPer100: 168, fixed: true, display: '1個' },
+      ], gut: '豆乳は植物性タンパク質＋イソフラボンが摂れる。バナナの水溶性食物繊維で腸活も✨' },
+    ],
+    lazy: [
+      { name: 'ズボラ混ぜるだけ朝食', lazy: true, items: [
+        { name: 'ギリシャヨーグルト（無糖）', gBase: 200, calPer100: CAL.yogurt_plain, ferment: true },
+        { name: 'バナナ', gBase: 150, calPer100: CAL.banana, fiber: 's', fixed: true, display: '1本' },
+        { name: 'ゆで卵（前日に茹でる）', gBase: 100, calPer100: CAL.egg, fixed: true, display: '2個' },
+        { name: '素焼きナッツ', gBase: 20, calPer100: CAL.nuts },
+      ], gut: '包丁も火も使わない完全ズボラ朝食。ヨーグルト＋バナナで腸活もできるよ。卵は前日の夜にまとめて茹でておくと楽✨' },
+      { name: 'レンチン納豆オートミール', lazy: true, items: [
+        { name: 'オートミール', gBase: 50, calPer100: CAL.oatmeal, fiber: 's', isOatmeal: true },
+        { name: '卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
+        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, fixed: true, display: '1パック' },
+        { name: '醤油', gBase: 5, calPer100: 71, fixed: true, display: '少々' },
+      ], gut: 'レンジ3分で完成。オートミール（水溶性）＋納豆（水溶性・発酵）で腸活最強の組み合わせだよ✊' },
+    ],
+  },
+  lunch: {
+    normal: [
+      { name: '鶏むね肉チンジャオロース風', items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: '鶏むね肉（皮なし）', gBase: 120, calPer100: CAL.chicken_breast },
+        { name: 'ピーマン・パプリカ', gBase: 100, calPer100: CAL.paprika, fiber: 'i' },
+        { name: 'たけのこ', gBase: 60, calPer100: 27, fiber: 'i' },
+        { name: 'しめじ', gBase: 50, calPer100: CAL.mushroom_mix, fiber: 'b' },
+      ], gut: 'ピーマン・パプリカの不溶性食物繊維としめじ（水溶性・不溶性）を組み合わせた腸活サポートの一品だよ' },
+      { name: 'キャベツと鶏むね肉の甘辛炒め', items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: '鶏むね肉（皮なし）', gBase: 120, calPer100: CAL.chicken_breast },
+        { name: 'キャベツ', gBase: 150, calPer100: CAL.cabbage, fiber: 'i' },
+        { name: 'わかめ味噌汁', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+      ], gut: 'キャベツの不溶性食物繊維が腸の動きをサポート。わかめ味噌汁で水溶性と発酵食品もプラスだよ✊' },
+      { name: 'ツナとひじきの混ぜご飯定食', items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: 'ツナ缶（水煮）', gBase: 70, calPer100: CAL.tuna_can, fixed: true, display: '1缶（70g）' },
+        { name: 'ひじきの煮物', gBase: 60, calPer100: CAL.hijiki_cooked, fiber: 's' },
+        { name: 'ブロッコリー蒸し', gBase: 100, calPer100: CAL.broccoli, fiber: 'i' },
+        { name: 'きのこ味噌汁', gBase: 150, calPer100: 18, fiber: 'b', ferment: true, fixed: true, display: '1杯' },
+      ], gut: 'ひじきで水溶性、ブロッコリーで不溶性、きのこで両方補える。食物繊維のバランスが特に良い献立だよ✊' },
+      { name: 'さば缶定食', items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: 'さば水煮缶', gBase: 190, calPer100: CAL.mackerel_can, fixed: true, display: '1缶（190g）' },
+        { name: 'ごぼうサラダ', gBase: 80, calPer100: CAL.burdock, fiber: 'i' },
+        { name: 'わかめ豆腐味噌汁', gBase: 150, calPer100: 18, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+      ], gut: 'ごぼうは不溶性食物繊維の王様。わかめ味噌汁の水溶性と合わせて理想の1：2バランスに近づけてるよ✨' },
+      { name: '麻婆白菜丼', items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: '豚もも肉（ひき肉）', gBase: 80, calPer100: CAL.pork_loin },
+        { name: '白菜', gBase: 200, calPer100: CAL.hakusai, fiber: 'i' },
+        { name: 'しいたけ・しめじ', gBase: 80, calPer100: CAL.shiitake, fiber: 'b' },
+        { name: '豆腐', gBase: 100, calPer100: CAL.tofu_silk },
+      ], gut: '白菜たっぷりで不溶性食物繊維が豊富。きのこで両方の食物繊維を補えるヘルシー麻婆だよ' },
+      { name: 'えびときのこの炒め定食', items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: 'えび', gBase: 100, calPer100: CAL.shrimp },
+        { name: 'エリンギ・えのき・しめじ', gBase: 120, calPer100: CAL.mushroom_mix, fiber: 'b' },
+        { name: 'チンゲン菜', gBase: 100, calPer100: CAL.chingensai, fiber: 'i' },
+        { name: 'わかめスープ', gBase: 150, calPer100: 7, fiber: 's', fixed: true, display: '1杯' },
+      ], gut: 'きのこ3種類で食物繊維をしっかり補給。チンゲン菜の不溶性とわかめの水溶性を組み合わせた腸に優しい献立だよ' },
+      { name: '豚しゃぶと海藻サラダ定食', items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: '豚もも肉', gBase: 100, calPer100: CAL.pork_loin },
+        { name: '海藻サラダ（わかめ・ひじき）', gBase: 80, calPer100: 20, fiber: 's' },
+        { name: 'レタス・きゅうり', gBase: 100, calPer100: 13, fiber: 'i' },
+      ], gut: '海藻サラダを加えることでサラダでも水溶性食物繊維がちゃんと摂れる。葉野菜だけじゃなく海藻も意識してね🌿' },
+    ],
+    convenience: [
+      { name: 'コンビニランチ①サラダチキン丼', conv: true, items: [
+        { name: 'おにぎり×2（鮭・梅）', gBase: 200, calPer100: 168, fixed: true, display: '2個（約200g）' },
+        { name: 'サラダチキン', gBase: 115, calPer100: CAL.chicken_breast, fixed: true, display: '1袋' },
+        { name: '野菜サラダ', gBase: 100, calPer100: 15, fiber: 'i', fixed: true, display: '1袋' },
+        { name: 'わかめスープ（インスタント）', gBase: 150, calPer100: 7, fiber: 's', fixed: true, display: '1杯' },
+      ], gut: 'サラダチキンはコンビニ最強のタンパク源。わかめスープを足すことで水溶性食物繊維も補給できるよ✊' },
+      { name: 'コンビニランチ②そば＋ゆで卵', conv: true, items: [
+        { name: 'ざるそば or 温玉そば', gBase: 200, calPer100: 100, fixed: true, display: '1杯' },
+        { name: 'ゆで卵', gBase: 100, calPer100: CAL.egg, fixed: true, display: '2個' },
+        { name: 'ヨーグルト（無糖）', gBase: 100, calPer100: CAL.yogurt_plain, ferment: true, fixed: true, display: '1個' },
+      ], gut: 'そばは食物繊維が豊富でGIが低め。ヨーグルトで発酵食品も一緒に摂れるコンビニランチだよ🌿' },
+      { name: 'コンビニランチ③納豆巻きセット', conv: true, items: [
+        { name: '納豆巻き or 納豆おにぎり', gBase: 180, calPer100: 140, fiber: 's', ferment: true, fixed: true, display: '1〜2本' },
+        { name: 'サラダチキン', gBase: 115, calPer100: CAL.chicken_breast, fixed: true, display: '1袋' },
+        { name: 'ヨーグルト（無糖）', gBase: 100, calPer100: CAL.yogurt_plain, ferment: true, fixed: true, display: '1個' },
+      ], gut: '納豆巻きなら発酵食品も一緒に摂れる。ヨーグルトで腸活ダブル効果だよ🌿' },
+    ],
+    lazy: [
+      { name: 'ズボラツナ納豆丼', lazy: true, items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: 'ツナ缶（水煮）', gBase: 70, calPer100: CAL.tuna_can, fixed: true, display: '1缶' },
+        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, fixed: true, display: '1パック' },
+        { name: '卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
+        { name: 'わかめ（乾燥）戻して', gBase: 20, calPer100: CAL.wakame_wet, fiber: 's', fixed: true, display: '少々' },
+      ], gut: '全部混ぜるだけのズボラ丼。ツナ＋納豆＋卵でタンパク質もしっかり。わかめで食物繊維もプラスだよ' },
+      { name: 'ズボラ冷奴＋さば缶定食', lazy: true, items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: '絹ごし豆腐', gBase: 150, calPer100: CAL.tofu_silk, fixed: true, display: '1/2丁（150g）' },
+        { name: 'さば水煮缶', gBase: 95, calPer100: CAL.mackerel_can, fixed: true, display: '1/2缶' },
+        { name: 'わかめ味噌汁（インスタント）', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+      ], gut: '豆腐もさば缶も開けるだけ。ほぼ調理不要なのにタンパク質と腸活食材がしっかり揃ってるよ✨' },
+    ],
+  },
+  dinner: {
+    normal: [
+      { name: 'ささ身の梅じそレンジ焼き', quick: true, items: [
+        { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
+        { name: '鶏ささ身', gBase: 150, calPer100: CAL.chicken_sasami },
+        { name: '梅干し＋大葉', gBase: 20, calPer100: 30, fixed: true, display: '梅1個・大葉2枚' },
+        { name: 'ブロッコリー蒸し', gBase: 100, calPer100: CAL.broccoli, fiber: 'i' },
+        { name: 'わかめ味噌汁', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+      ], gut: 'ささ身はむね肉よりさらに低カロリー。レンジで5分の時短メニューだよ。ブロッコリーの不溶性食物繊維もしっかり摂れる🌿' },
+      { name: '豚しゃぶ温野菜のオイスターソースかけ', items: [
+        { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
+        { name: '豚もも肉', gBase: 120, calPer100: CAL.pork_loin },
+        { name: 'キャベツ・もやし・ほうれん草', gBase: 200, calPer100: 18, fiber: 'i' },
+        { name: 'わかめ', gBase: 20, calPer100: CAL.wakame_wet, fiber: 's' },
+        { name: 'しめじ', gBase: 50, calPer100: CAL.mushroom_mix, fiber: 'b' },
+      ], gut: '温野菜にすることで生より多くの食物繊維が摂れる。キャベツ・もやしの不溶性とわかめの水溶性でバランス良いよ' },
+      { name: '鶏肉ときのこのホイル焼き', items: [
+        { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
+        { name: '鶏むね肉（皮なし）', gBase: 120, calPer100: CAL.chicken_breast },
+        { name: 'まいたけ・しめじ', gBase: 100, calPer100: CAL.mushroom_mix, fiber: 'b' },
+        { name: '玉ねぎ', gBase: 80, calPer100: 37, fiber: 'i' },
+        { name: 'わかめ味噌汁', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+      ], gut: 'ホイル焼きは油なしで調理できるから低カロリー。まいたけ・しめじの食物繊維がしっかり摂れるよ✊' },
+      { name: 'こんにゃくと根菜の煮物定食', items: [
+        { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
+        { name: 'さば水煮缶', gBase: 190, calPer100: CAL.mackerel_can, fixed: true, display: '1缶（190g）' },
+        { name: 'こんにゃく', gBase: 100, calPer100: CAL.konjac, fiber: 's' },
+        { name: 'ごぼう', gBase: 80, calPer100: CAL.burdock, fiber: 'i' },
+        { name: 'わかめスープ', gBase: 150, calPer100: 7, fiber: 's', fixed: true, display: '1杯' },
+      ], gut: 'こんにゃくは水溶性食物繊維の塊。ごぼうの不溶性と合わせることで腸内のバランスが整いやすくなるよ✊' },
+      { name: '蒸し鶏バンバンジー', items: [
+        { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
+        { name: '鶏むね肉（皮なし）', gBase: 150, calPer100: CAL.chicken_breast },
+        { name: 'きゅうり・レタス', gBase: 160, calPer100: 13, fiber: 'i' },
+        { name: 'アボカド', gBase: 35, calPer100: CAL.avocado, fiber: 's', fixed: true, display: '1/4個（35g）' },
+        { name: 'わかめとなめこの味噌汁', gBase: 150, calPer100: 18, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+      ], gut: 'なめこは水溶性食物繊維が豊富でぬめりが腸にやさしい。わかめと合わせた味噌汁で水溶性をしっかり補給できるよ' },
+      { name: 'えびと豆腐の中華スープ煮', items: [
+        { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
+        { name: 'えび', gBase: 100, calPer100: CAL.shrimp },
+        { name: '絹ごし豆腐', gBase: 150, calPer100: CAL.tofu_silk },
+        { name: 'しいたけ・木耳', gBase: 100, calPer100: CAL.mushroom_mix, fiber: 'b' },
+        { name: 'チンゲン菜', gBase: 100, calPer100: CAL.chingensai, fiber: 'i' },
+      ], gut: '木耳（きくらげ）は食物繊維の含有量がとても多い食材。しいたけと合わせることで腸活効果がアップするよ✊' },
+      { name: 'キムチ鍋', items: [
+        { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
+        { name: '豚もも肉', gBase: 100, calPer100: CAL.pork_loin },
+        { name: '木綿豆腐', gBase: 150, calPer100: CAL.tofu_firm },
+        { name: 'キムチ', gBase: 80, calPer100: CAL.kimchi, ferment: true, fixed: true, display: '80g' },
+        { name: 'えのき・もやし・ニラ', gBase: 180, calPer100: 18, fiber: 'i' },
+      ], gut: 'キムチは発酵食品の中でも特に乳酸菌が豊富。野菜の食物繊維と一緒に摂ることで善玉菌のエサになって腸活効果が高まるよ🌿' },
+      { name: '豚しゃぶきのこ鍋', items: [
+        { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
+        { name: '豚もも肉', gBase: 120, calPer100: CAL.pork_loin },
+        { name: 'しいたけ・えのき・しめじ', gBase: 120, calPer100: CAL.mushroom_mix, fiber: 'b' },
+        { name: '白菜・ほうれん草', gBase: 160, calPer100: 14, fiber: 'i' },
+        { name: 'ひじき', gBase: 10, calPer100: CAL.hijiki_dry, fiber: 's' },
+      ], gut: 'きのこたっぷりの鍋は腸活に最適。白菜・ほうれん草の不溶性とひじきの水溶性で理想のバランスが取れてるよ' },
+    ],
+    convenience: [
+      { name: 'コンビニ夕食①鍋セット＋ご飯', conv: true, items: [
+        { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
+        { name: 'サラダチキン', gBase: 115, calPer100: CAL.chicken_breast, fixed: true, display: '1袋' },
+        { name: 'カット野菜（鍋用）', gBase: 200, calPer100: 18, fiber: 'i', fixed: true, display: '1袋' },
+        { name: 'きのこミックス（冷凍）', gBase: 100, calPer100: CAL.mushroom_mix, fiber: 'b', fixed: true, display: '適量' },
+        { name: 'わかめスープ', gBase: 150, calPer100: 7, fiber: 's', fixed: true, display: '1杯' },
+      ], gut: 'コンビニのカット野菜＋きのこで食物繊維を補給。わかめスープで水溶性もプラスできるよ🌿' },
+      { name: 'コンビニ夕食②ゆで卵＋納豆丼', conv: true, items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: 'ゆで卵', gBase: 100, calPer100: CAL.egg, fixed: true, display: '2個' },
+        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, fixed: true, display: '1パック' },
+        { name: 'わかめ味噌汁（インスタント）', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+      ], gut: '納豆＋味噌汁で発酵食品ダブル。わかめで水溶性食物繊維も補給。疲れた夜でも続けやすい献立だよ✊' },
+    ],
+    lazy: [
+      { name: 'ズボラレンチン蒸し鶏丼', lazy: true, items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: '鶏むね肉（皮なし）', gBase: 150, calPer100: CAL.chicken_breast },
+        { name: '冷凍ブロッコリー', gBase: 100, calPer100: CAL.broccoli, fiber: 'i', fixed: true, display: '100g' },
+        { name: 'わかめ味噌汁（インスタント）', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+      ], gut: '鶏むね肉はレンジ加熱で簡単に調理できる。冷凍ブロッコリーは解凍するだけでOK。ズボラでも腸活食材が揃うよ✨' },
+      { name: 'ズボラさば缶丼', lazy: true, items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: 'さば水煮缶', gBase: 190, calPer100: CAL.mackerel_can, fixed: true, display: '1缶' },
+        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, fixed: true, display: '1パック' },
+        { name: 'わかめ（乾燥）', gBase: 5, calPer100: CAL.wakame_wet, fiber: 's', fixed: true, display: '少々' },
+      ], gut: 'さば缶を開けてご飯に乗せるだけ。納豆（発酵・水溶性）＋わかめ（水溶性）で腸活もバッチリだよ' },
+    ],
+  },
+};
+
+const snacks = [
+  { name: 'ダークチョコ＋ナッツ', desc: 'カカオ70%以上を2〜3粒（10g）＋素焼きミックスナッツ20g', fiber: '不溶性食物繊維も含むよ', cal: 130 },
+  { name: 'ギリシャヨーグルト＋バナナ', desc: '無糖ギリシャヨーグルト100g＋バナナ1/2本（75g）', fiber: '発酵食品＋水溶性食物繊維の最強コンビ（約129kcal）', cal: 129 },
+  { name: '焼き芋', desc: '小さめ焼き芋1本（約150g）', fiber: '不溶性食物繊維が豊富。食後の血糖値上昇もゆるやか（約198kcal）', cal: 198 },
+  { name: 'りんご＋ゆで卵', desc: 'りんご1/2個（125g）＋ゆで卵1個（50g）', fiber: 'りんごの水溶性食物繊維（ペクチン）が善玉菌のエサになるよ（約135kcal）', cal: 135 },
+  { name: 'アボカド＋全粒粉クラッカー', desc: '全粒粉クラッカー3枚（約30g）＋アボカド1/4個（35g）', fiber: 'アボカドの水溶性＋全粒粉の不溶性が摂れる（約142kcal）', cal: 142 },
+  { name: 'オートミールクッキー', desc: '市販のオートミールクッキー2枚（約40g）', fiber: '水溶性食物繊維（β-グルカン）が豊富で血糖値の上昇を抑えるよ（約152kcal）', cal: 152 },
+  { name: 'キウイ＋素焼きアーモンド', desc: 'キウイ1個（100g）＋素焼きアーモンド15粒（20g）', fiber: 'キウイは水溶性・不溶性どちらも含む優秀フルーツ（約165kcal）', cal: 165 },
+];
+
+const tips = [
+  '食事の順番は「野菜→タンパク質→炭水化物」を意識してみて。血糖値の急上昇が防げて脂肪がつきにくくなるよ✊',
+  '毎日完璧にアンダーカロリーにしなくていい。長期的に見てアンダーカロリーになっていれば、結果的に痩せていくよ',
+  '発酵食品と食物繊維はセットで摂るのが大事。発酵食品だけ食べても腸内に届く菌は数日で排出されてしまうから食物繊維も忘れずにね',
+  '腸内環境が整うと食欲が安定してくる。代謝も上がって同じものを食べても太りにくい体になっていくよ✨',
+  '今日も頑張ってるね。無理に完璧にしようとしなくていい。8割続けられれば十分痩せていくよ',
+  '夕食後に甘いものが食べたくなるのは自然なこと。ダークチョコ2〜3粒なら血糖値への影響が少ないからおすすめだよ',
+  '週末は少しゆるめていい。ストレスを溜めないことも大事なダイエットの一部。完璧じゃなくていいからね🌿',
+];
+
+function getItemCal(item, riceCalPer100) {
+  const c = item.isRice ? riceCalPer100 : item.calPer100;
+  return item.gBase * c / 100;
+}
+
+function adjustMeal(template, targetCal, riceType) {
+  const riceConf = RICE_CONFIG[riceType];
+  const rcp = riceConf.calPer100;
+  const fixedCal = template.items.filter(i => i.fixed).reduce((s, i) => s + getItemCal(i, rcp), 0);
+  const scalableBase = template.items.filter(i => !i.fixed).reduce((s, i) => s + getItemCal(i, rcp), 0);
+  const scalableTarget = Math.max(targetCal - fixedCal, 0);
+  const ratio = scalableBase > 0 ? scalableTarget / scalableBase : 1;
+
+  const items = [];
+  let rawCal = 0;
+
+  template.items.forEach(item => {
+    const cp = item.isRice ? rcp : item.calPer100;
+    let g = item.fixed ? item.gBase : item.gBase * ratio;
+    if (item.isStaple) g = Math.min(g, 200);
+    if (item.isOatmeal) g = Math.min(g, 70);
+    if (!item.fixed && g < 5) return;
+    rawCal += g * cp / 100;
+    const name = item.name === '__RICE__' ? riceConf.name : item.name;
+    const fiber = item.isRice ? riceConf.fiber : item.fiber;
+    const display = item.display ? item.display : `${Math.round(g / 5) * 5}g`;
+    items.push({ name, amount: display, fiber, ferment: item.ferment });
+  });
+
+  return {
+    name: template.name,
+    quick: template.quick, conv: template.conv, lazy: template.lazy,
+    items,
+    cal: Math.round(rawCal * 1.05),
+    gut: template.gut,
+  };
+}
+
+function generateMenu() {
+  goScreen(3);
+  document.getElementById('loading').style.display = 'block';
+  document.getElementById('result-content').style.display = 'none';
+  setTimeout(() => {
+    const cal = calcCalories();
+    userData.cal = cal;
+    ['normal', 'convenience', 'lazy'].forEach(type => {
+      weekMenu[type] = [];
+      for (let i = 0; i < 7; i++) {
+        const bf = DB.breakfast[type];
+        const lu = DB.lunch[type];
+        const di = DB.dinner[type];
+        weekMenu[type].push({
+          breakfast: adjustMeal(bf[i % bf.length], cal.mealCal.breakfast, cal.riceType),
+          lunch:     adjustMeal(lu[i % lu.length], cal.mealCal.lunch, cal.riceType),
+          dinner:    adjustMeal(di[i % di.length], cal.mealCal.dinner, cal.riceType),
+          snack:     { ...snacks[i % snacks.length], calTarget: cal.mealCal.snack },
+          tip:       tips[i % tips.length],
+        });
+      }
+    });
+    document.getElementById('loading').style.display = 'none';
+    renderResult(cal);
+  }, 1500);
+}
+
+function fiberBadge(fiber, ferment) {
+  let h = '';
+  if (fiber === 's') h += '<span class="fiber-badge fiber-s">水溶性</span>';
+  else if (fiber === 'i') h += '<span class="fiber-badge fiber-i">不溶性</span>';
+  else if (fiber === 'b') h += '<span class="fiber-badge fiber-b">水溶性・不溶性</span>';
+  if (ferment) h += '<span class="ferment-badge">発酵</span>';
+  return h;
+}
+
+function renderResult(cal) {
+  const content = document.getElementById('result-content');
+  const diff = userData.weight - userData.target;
+  const levelLabel = cal.deficitVal === 300 ? '🌱ゆるめ' : cal.deficitVal === 500 ? '🔥標準' : '💪ガチ';
+  const trainLabel = cal.training === 'yes' ? '×2.2g' : '×1.5g';
+  const riceName = RICE_CONFIG[cal.riceType].name;
+
+  let warnings = '';
+  if (cal.belowBmr) {
+    warnings += `<div class="warning-box">⚠️ 摂取目標が基礎代謝（${cal.bmr.toLocaleString()}kcal）を下回るため、基礎代謝を摂取目標として採用しています。活動量を1段階上げるか、減量ペースを「ゆるめ」にすることをおすすめします。</div>`;
+  }
+  if (cal.nursingHighDeficit) {
+    warnings += `<div class="warning-box">🤱 授乳中に−500kcal以上の赤字は乳量減少・栄養不足のリスクがあります。「ゆるめ（−300kcal）」への変更を強くおすすめします。</div>`;
+  }
+  if (cal.overSafeLimit) {
+    warnings += `<div class="warning-box">⚠️ 選択した減量ペース（−${cal.deficitVal}kcal）はあなたの体重（${userData.weight}kg）に対して月の減量が体重の3%を超える可能性があります（安全上限の目安：約−${cal.safeDeficitMax}kcal/日）。筋肉量の減少・リバウンドのリスクがあるため「ゆるめ」か「標準」を推奨します。</div>`;
+  }
+
+  content.innerHTML = `
+    ${warnings}
+    <div class="result-summary">
+      <div class="label">1日の摂取目標カロリー</div>
+      <div class="calorie-big">${cal.dietCalorie.toLocaleString()}<span> kcal</span></div>
+      <div style="font-size:11px;color:#aaa;margin-top:6px">基礎代謝 ${cal.bmr.toLocaleString()} ／ 総消費 ${cal.tdee.toLocaleString()} ／ ${levelLabel}（−${cal.deficitVal}kcal）${cal.nursing === 'yes' ? ' ／ 🤱授乳中+350kcal加算済み' : ''}</div>
+      <div class="calorie-breakdown">
+        <div class="breakdown-item"><div class="val">${cal.protein}g</div><div class="lbl">タンパク質<br><span style="font-size:9px">${cal.proteinCal}kcal</span></div></div>
+        <div class="breakdown-item"><div class="val">${cal.fat}g</div><div class="lbl">脂質<br><span style="font-size:9px">${cal.fatCal}kcal（25%）</span></div></div>
+        <div class="breakdown-item"><div class="val">${cal.carb}g</div><div class="lbl">炭水化物<br><span style="font-size:9px">${cal.carbCal}kcal</span></div></div>
+      </div>
+      <div class="meal-split">
+        <div class="split-item"><div class="s-val">${cal.mealCal.breakfast}</div><div class="s-lbl">朝食 kcal</div></div>
+        <div class="split-item"><div class="s-val">${cal.mealCal.lunch}</div><div class="s-lbl">昼食 kcal</div></div>
+        <div class="split-item"><div class="s-val">${cal.mealCal.dinner}</div><div class="s-lbl">夕食 kcal</div></div>
+        <div class="split-item"><div class="s-val">${cal.mealCal.snack}</div><div class="s-lbl">おやつ kcal</div></div>
+      </div>
+    </div>
+    <div class="info-box">
+      <strong>計算方法（あやか式）</strong><br>
+      基礎代謝（Mifflin-St Jeor式）× 活動係数 = 総消費カロリー<br>
+      摂取目標 = 総消費 − ${cal.deficitVal}kcal（${levelLabel}）${cal.nursing === 'yes' ? ' + 350kcal（授乳付加）' : ''}<br>
+      タンパク質：除脂肪体重（${cal.lbm}kg）${trainLabel} ／ 脂質：摂取目標の25% ／ 炭水化物：残り<br>
+      主食：${riceName} ／ ※カロリー表示は+5%のバッファを含みます<br>
+      <span style="color:#C0392B;font-size:11px">⚠️ 腎機能に不安がある方はタンパク質量について医師・管理栄養士にご相談ください</span>
+    </div>
+    <div style="font-size:13px;color:var(--mid);margin-bottom:16px;line-height:1.7">
+      目標まで <strong style="color:var(--dark)">${diff}kg</strong>。月約 <strong style="color:var(--accent)">${cal.monthLoss}kg</strong> ペースで減っていくよ✊<br>
+      <span style="font-size:12px">※体重の3〜5%が健康的なペース。急激に落とさないことが大事！</span>
+    </div>
+    <div class="menu-type-tabs">
+      <div class="menu-type-tab active" id="tab_normal" onclick="switchType('normal')">🍳 通常</div>
+      <div class="menu-type-tab" id="tab_convenience" onclick="switchType('convenience')">🏪 コンビニ</div>
+      <div class="menu-type-tab" id="tab_lazy" onclick="switchType('lazy')">😴 ズボラ</div>
+    </div>
+    <div class="week-tabs" id="weekTabs"></div>
+    <div id="dayContent"></div>
+    <button class="btn-secondary" onclick="goScreen(1)" style="margin-top:24px">← 最初からやり直す</button>
+  `;
+  content.style.display = 'block';
+  const tabs = document.getElementById('weekTabs');
+  dayShort.forEach((d, i) => {
+    const tab = document.createElement('div');
+    tab.className = 'day-tab' + (i === 0 ? ' active' : '');
+    tab.textContent = d;
+    tab.onclick = () => selectDay(i);
+    tabs.appendChild(tab);
+  });
+  currentType = 'normal';
+  selectDay(0);
+}
+
+function switchType(type) {
+  currentType = type;
+  document.querySelectorAll('.menu-type-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab_' + type).classList.add('active');
+  const activeDayIdx = [...document.querySelectorAll('.day-tab')].findIndex(t => t.classList.contains('active'));
+  selectDay(activeDayIdx >= 0 ? activeDayIdx : 0);
+}
+
+function selectDay(idx) {
+  document.querySelectorAll('.day-tab').forEach((t, i) => t.classList.toggle('active', i === idx));
+  const menu = weekMenu[currentType][idx];
+  const meals = [
+    { icon: '🌅', label: '朝食', data: menu.breakfast },
+    { icon: '☀️', label: '昼食', data: menu.lunch },
+    { icon: '🌙', label: '夕食', data: menu.dinner },
+  ];
+
+  let html = `
+    <div style="font-size:14px;font-weight:700;margin-bottom:8px;color:var(--mid)">${days[idx]}</div>
+    <div class="fiber-legend">
+      <span class="fiber-badge fiber-s">水溶性</span>
+      <span class="fiber-badge fiber-i">不溶性</span>
+      <span class="fiber-badge fiber-b">水溶性・不溶性</span>
+      <span class="ferment-badge">発酵</span>
+    </div>`;
+
+  meals.forEach(meal => {
+    const d = meal.data;
+    const badgeHtml = d.quick ? '<span class="badge badge-quick">⏱ 時短</span>'
+      : d.conv ? '<span class="badge badge-conv">🏪 コンビニ</span>'
+      : d.lazy ? '<span class="badge badge-lazy">😴 ズボラ</span>' : '';
+    const tags = d.items.map(item => `
+      <div class="ingredient-tag">
+        <span>${item.name}</span>${fiberBadge(item.fiber, item.ferment)}
+        <span class="ingredient-amount">${item.amount}</span>
+      </div>`).join('');
+    html += `
+      <div class="meal-card">
+        <div class="meal-header">
+          <span class="meal-icon">${meal.icon}</span>
+          <span class="meal-type-label">${meal.label}</span>
+          ${badgeHtml}
+          <span class="meal-cal-badge">${d.cal}kcal</span>
+        </div>
+        <div class="meal-name">${d.name}</div>
+        <div class="ingredients">${tags}</div>
+      </div>
+      <div class="gut-tip"><div class="gt-label">🌿 腸活ポイント</div>${d.gut}</div>`;
+  });
+
+  html += `
+    <div class="snack-note">
+      <div class="snack-title">🍫 おやつ（目安 ${menu.snack.calTarget}kcal）</div>
+      <strong>${menu.snack.name}</strong><br>
+      <span style="color:var(--mid)">${menu.snack.desc}</span><br>
+      <span style="font-size:11px;color:var(--success);margin-top:4px;display:block">🌿 ${menu.snack.fiber}</span>
+    </div>
+    <div class="ayaka-tip">
+      <div class="tip-label">💬 あやかより</div>
+      <p>${menu.tip}</p>
+    </div>`;
+
+  document.getElementById('dayContent').innerHTML = html;
+  window.scrollTo({ top: document.querySelector('.week-tabs').offsetTop - 80, behavior: 'smooth' });
+}
+</script>
+
+</body>
+</html>
