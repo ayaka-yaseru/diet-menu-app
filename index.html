@@ -225,18 +225,51 @@ const RICE_CONFIG = {
 };
 
 const CAL = {
-  rice: 168, oatmeal: 380, bread_whole: 264,
-  chicken_breast: 125, chicken_sasami: 110, ground_chicken: 110, pork_loin: 190,
-  salmon: 150, mackerel: 220, mackerel_can: 174, tuna_can: 71, shrimp: 90, salmon_flake: 186,
-  natto: 200, tofu_silk: 56, tofu_firm: 72, tofu_hamburg: 130,
-  egg: 154, yogurt_plain: 62,
+  // 主食（食品成分表2020・調理後）
+  rice: 168,        // 白米ご飯 168kcal/100g
+  oatmeal: 380,     // オートミール（乾燥）380kcal/100g
+  bread_whole: 264, // 全粒粉パン 264kcal/100g
+  pasta_cooked: 149,// パスタ（茹で後）149kcal/100g
+  // 肉類（調理後）
+  chicken_breast: 125, // 鶏むね肉皮なし 125kcal/100g
+  chicken_sasami: 110, // 鶏ささ身 110kcal/100g
+  ground_chicken: 110, // 鶏ひき肉 110kcal/100g
+  pork_loin: 190,      // 豚もも肉 190kcal/100g
+  // 魚介類（調理後）
+  salmon: 150,         // さけ 150kcal/100g
+  mackerel: 220,       // さば 220kcal/100g
+  mackerel_can: 174,   // さば水煮缶 174kcal/100g（1缶190g=331kcal）
+  tuna_can: 71,        // ツナ水煮缶 71kcal/100g（1缶70g=50kcal）
+  shrimp: 90,          // えび 90kcal/100g
+  salmon_flake: 186,   // 鮭フレーク 186kcal/100g
+  shirasu: 206,        // ちりめんじゃこ 206kcal/100g
+  // 大豆製品
+  natto: 200,          // 納豆 200kcal/100g（1パック50g=100kcal）
+  tofu_silk: 56,       // 絹ごし豆腐 56kcal/100g
+  tofu_firm: 72,       // 木綿豆腐 72kcal/100g
+  tofu_hamburg: 130,   // 豆腐ハンバーグ 130kcal/100g（概算）
+  // 卵・乳製品
+  egg: 154,            // 全卵 154kcal/100g（M1個50g=77kcal）
+  yogurt_plain: 62,    // プレーンヨーグルト 62kcal/100g
+  // 野菜類
   broccoli: 33, spinach: 20, komatsuna: 14, chingensai: 12,
   lettuce: 12, cucumber: 14, tomato: 20, burdock: 58, sweet_potato: 132,
   cabbage: 23, hakusai: 14, bean_sprouts: 15, leek: 31, paprika: 30,
+  // きのこ類（低カロリー・食物繊維豊富）
   mushroom_mix: 25, shiitake: 23,
-  wakame_wet: 16, hijiki_cooked: 70, hijiki_dry: 180,
-  banana: 89, avocado: 180, apple: 46, kiwi: 45,
-  konjac: 5, miso_soup: 15, kimchi: 31, nuts: 600,
+  // 海藻類
+  wakame_wet: 16,      // わかめ（湿重量） 16kcal/100g
+  hijiki_cooked: 70,   // ひじき煮物 70kcal/100g（概算）
+  hijiki_dry: 180,     // ひじき（乾燥）180kcal/100g
+  // 果物
+  banana: 86,          // バナナ 86kcal/100g（1本150g=129kcal）※旧89→86に修正
+  avocado: 176,        // アボカド 176kcal/100g（※旧180→176に修正）
+  apple: 46, kiwi: 53, // りんご46、キウイ53kcal/100g
+  // その他
+  konjac: 5,           // こんにゃく 5kcal/100g
+  miso_soup: 15,       // 味噌汁（1杯） 15kcal
+  kimchi: 31,          // キムチ 31kcal/100g
+  nuts: 617,           // 素焼きミックスナッツ 617kcal/100g（※旧600→617に修正）
 };
 
 function goScreen(n) {
@@ -319,111 +352,170 @@ function calcCalories() {
 }
 
 // ===================================================================
-// 献立データ（通常・コンビニ・ズボラ）
+// 献立データ（通常・コンビニ・ズボラ）拡充版
+// カロリー根拠：文部科学省食品成分表2020年版
 // ===================================================================
 const DB = {
   breakfast: {
     normal: [
       { name: '納豆ご飯＋わかめ味噌汁', quick: true, items: [
         { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
-        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, fixed: true, display: '1パック（50g）' },
+        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, isPack: true, display: '1パック（50g）' },
         { name: 'わかめ味噌汁', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
-        { name: 'ゆで卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
+        { name: 'ゆで卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個（50g）' },
       ], gut: '納豆＋味噌は最強の発酵コンビ。もち麦入りにすれば水溶性食物繊維もバッチリだよ✊' },
       { name: 'オートミール＋ヨーグルト', quick: true, items: [
         { name: 'オートミール', gBase: 50, calPer100: CAL.oatmeal, fiber: 's', isOatmeal: true },
         { name: 'ギリシャヨーグルト（無糖）', gBase: 100, calPer100: CAL.yogurt_plain, ferment: true },
         { name: 'バナナ', gBase: 150, calPer100: CAL.banana, fiber: 's', fixed: true, display: '1本（150g）' },
-        { name: 'ゆで卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
+        { name: 'ゆで卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個（50g）' },
       ], gut: 'オートミール＋バナナ（水溶性）＋ヨーグルト（発酵）の腸活トリプルコンビ。電子レンジ2分でできるよ🌿' },
-      { name: 'ご飯＋鮭フレーク＋味噌汁', quick: true, items: [
+      { name: 'ご飯＋鮭フレーク＋わかめ味噌汁', quick: true, items: [
         { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
-        { name: '鮭フレーク', gBase: 30, calPer100: CAL.salmon_flake },
+        { name: '鮭フレーク', gBase: 30, calPer100: CAL.salmon_flake, fixed: true, display: '30g' },
         { name: 'わかめ味噌汁', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
-        { name: 'ゆで卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
+        { name: 'ゆで卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個（50g）' },
       ], gut: '鮭フレークで手軽にタンパク質補給。わかめ味噌汁で発酵＋水溶性食物繊維も摂れるよ' },
       { name: 'ご飯＋卵かけ＋きのこ味噌汁', quick: true, items: [
         { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
-        { name: '卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
+        { name: '卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個（50g）' },
         { name: 'きのこ味噌汁', gBase: 150, calPer100: 18, fiber: 'b', ferment: true, fixed: true, display: '1杯' },
-        { name: '海苔', gBase: 3, calPer100: 167, fixed: true, display: '1枚' },
+        { name: '海苔', gBase: 3, calPer100: 167, fixed: true, display: '1枚（3g）' },
       ], gut: 'きのこ味噌汁で水溶性・不溶性両方の食物繊維が摂れる。卵でタンパク質も補給できるよ' },
       { name: 'バナナヨーグルト＋ゆで卵', quick: true, items: [
         { name: 'ギリシャヨーグルト（無糖）', gBase: 150, calPer100: CAL.yogurt_plain, ferment: true },
         { name: 'バナナ', gBase: 150, calPer100: CAL.banana, fiber: 's', fixed: true, display: '1本（150g）' },
-        { name: 'ゆで卵', gBase: 100, calPer100: CAL.egg, fixed: true, display: '2個' },
+        { name: 'ゆで卵', gBase: 100, calPer100: CAL.egg, fixed: true, display: '2個（100g）' },
         { name: '素焼きナッツ', gBase: 15, calPer100: CAL.nuts },
       ], gut: '調理不要の超時短朝食。ヨーグルト（発酵）＋バナナ（水溶性食物繊維）で腸活もできるよ✨' },
       { name: '全粒粉トースト＋納豆＋ヨーグルト', quick: true, items: [
         { name: '全粒粉パン', gBase: 90, calPer100: CAL.bread_whole, fiber: 'i', fixed: true, display: '2枚（90g）' },
-        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, fixed: true, display: '1パック' },
-        { name: 'ゆで卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
+        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, isPack: true, display: '1パック（50g）' },
+        { name: 'ゆで卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個（50g）' },
         { name: 'ギリシャヨーグルト（無糖）', gBase: 80, calPer100: CAL.yogurt_plain, ferment: true },
       ], gut: '全粒粉の不溶性＋納豆の水溶性でバランスよく食物繊維が摂れる。ヨーグルトで発酵もプラスだよ' },
       { name: 'オートミール雑炊', quick: true, items: [
         { name: 'オートミール', gBase: 50, calPer100: CAL.oatmeal, fiber: 's', isOatmeal: true },
-        { name: '卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
+        { name: '卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個（50g）' },
         { name: 'わかめ', gBase: 15, calPer100: CAL.wakame_wet, fiber: 's' },
         { name: '顆粒だし＋醤油', gBase: 5, calPer100: 50, fixed: true, display: '適量' },
       ], gut: '電子レンジ3分で完成。わかめとオートミールのダブル水溶性食物繊維で腸を朝から整えてくれるよ' },
+      // 追加メニュー
+      { name: '豆腐そぼろ丼＋みそ汁', quick: true, items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: '木綿豆腐', gBase: 100, calPer100: CAL.tofu_firm },
+        { name: '鶏ひき肉', gBase: 50, calPer100: CAL.ground_chicken },
+        { name: 'きのこ味噌汁', gBase: 150, calPer100: 18, fiber: 'b', ferment: true, fixed: true, display: '1杯' },
+      ], gut: '豆腐でかさ増しすることで低カロリーでも満腹感が出る。大豆イソフラボンも摂れてホルモンバランスにも◎' },
+      { name: 'サーモンアボカドご飯', quick: true, items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: '鮭フレーク', gBase: 30, calPer100: CAL.salmon_flake, fixed: true, display: '30g' },
+        { name: 'アボカド', gBase: 70, calPer100: CAL.avocado, fiber: 's', fixed: true, display: '1/2個（70g）' },
+        { name: 'わかめ味噌汁', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+      ], gut: 'アボカドの良質な脂質と鮭のDHA・EPAで肌にも体にも嬉しい朝食。水溶性食物繊維と発酵食品もしっかり摂れるよ✨' },
+      { name: 'ちりめんじゃこご飯＋豆腐味噌汁', quick: true, items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: 'ちりめんじゃこ', gBase: 15, calPer100: 206, fixed: true, display: '大さじ2（15g）' },
+        { name: '絹ごし豆腐＋わかめ味噌汁', gBase: 150, calPer100: 20, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+        { name: 'ゆで卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個（50g）' },
+      ], gut: 'ちりめんじゃこはカルシウムが豊富で骨密度維持にも効果的。産後の骨回復が気になる人にも特におすすめだよ✊' },
     ],
     convenience: [
-      { name: 'コンビニ朝食①おにぎり＋サラダチキン', conv: true, items: [
-        { name: 'おにぎり（鮭or昆布）', gBase: 100, calPer100: 168, fixed: true, display: '1個（約100g）' },
-        { name: 'サラダチキン', gBase: 100, calPer100: CAL.chicken_breast, fixed: true, display: '1袋（100g）' },
-        { name: 'ギリシャヨーグルト（市販）', gBase: 100, calPer100: CAL.yogurt_plain, ferment: true, fixed: true, display: '1個' },
-        { name: 'バナナ', gBase: 150, calPer100: CAL.banana, fiber: 's', fixed: true, display: '1本' },
-      ], gut: 'コンビニで全部揃う。ヨーグルト（発酵）＋バナナ（水溶性食物繊維）は腸活的にも合格点だよ✊' },
-      { name: 'コンビニ朝食②ゆで卵＋豆乳', conv: true, items: [
-        { name: 'ゆで卵（コンビニ）', gBase: 100, calPer100: CAL.egg, fixed: true, display: '2個' },
-        { name: '豆乳（無調整）', gBase: 200, calPer100: 46, fixed: true, display: '1本（200ml）' },
-        { name: 'バナナ', gBase: 150, calPer100: CAL.banana, fiber: 's', fixed: true, display: '1本' },
-        { name: 'おにぎり（梅）', gBase: 100, calPer100: 168, fixed: true, display: '1個' },
-      ], gut: '豆乳は植物性タンパク質＋イソフラボンが摂れる。バナナの水溶性食物繊維で腸活も✨' },
+      // ★コンビニ版は isConv:true で専用処理（スケールなし・カロリー帯で商品組み合わせを変える）
+      // 朝食カロリー目安：低(〜320kcal) / 中(321〜420kcal) / 高(421kcal〜)
+      // 各パターンのkcalは実測値（文部科学省食品成分表2020準拠）
+      {
+        name: 'コンビニ朝食①おにぎり＋ゆで卵', isConv: true,
+        patterns: [
+          // 低カロリー帯（〜320kcal）：おにぎり1個+ゆで卵1個+ヨーグルト
+          { maxCal: 320, items: [
+            { name: 'おにぎり（鮭・梅・昆布）', gBase: 100, calPer100: 168, display: '1個（約100g）' },
+            { name: 'ゆで卵', gBase: 50, calPer100: 154, display: '1個（50g）' },
+            { name: 'ヨーグルト（無糖）', gBase: 100, calPer100: 62, ferment: true, display: '1個（100g）' },
+          ], totalCal: 321 },
+          // 中カロリー帯（321〜420kcal）：おにぎり1個+ゆで卵2個+ヨーグルト
+          { maxCal: 420, items: [
+            { name: 'おにぎり（鮭・梅・昆布）', gBase: 100, calPer100: 168, display: '1個（約100g）' },
+            { name: 'ゆで卵', gBase: 100, calPer100: 154, display: '2個（100g）' },
+            { name: 'ヨーグルト（無糖）', gBase: 100, calPer100: 62, ferment: true, display: '1個（100g）' },
+            { name: 'バナナ', gBase: 75, calPer100: 86, fiber: 's', display: '1/2本（75g）' },
+          ], totalCal: 398 },
+          // 高カロリー帯（421kcal〜）：おにぎり2個+ゆで卵1個+ヨーグルト+バナナ
+          { maxCal: 9999, items: [
+            { name: 'おにぎり×2（鮭・梅）', gBase: 200, calPer100: 168, display: '2個（約200g）' },
+            { name: 'ゆで卵', gBase: 100, calPer100: 154, display: '2個（100g）' },
+            { name: 'ヨーグルト（無糖）', gBase: 100, calPer100: 62, ferment: true, display: '1個（100g）' },
+            { name: 'バナナ', gBase: 150, calPer100: 86, fiber: 's', display: '1本（150g）' },
+          ], totalCal: 563 },
+        ],
+        gut: 'コンビニで全部揃う。ヨーグルト（発酵）＋バナナ（水溶性食物繊維）は腸活的にも合格点だよ✊'
+      },
+      {
+        name: 'コンビニ朝食②サラダチキン＋豆乳', isConv: true,
+        patterns: [
+          { maxCal: 320, items: [
+            { name: 'サラダチキン（プレーン）', gBase: 115, calPer100: 125, display: '1袋（115g）' },
+            { name: 'おにぎり（梅or昆布）', gBase: 100, calPer100: 168, display: '1個（約100g）' },
+          ], totalCal: 312 },
+          { maxCal: 420, items: [
+            { name: 'サラダチキン（プレーン）', gBase: 115, calPer100: 125, display: '1袋（115g）' },
+            { name: 'おにぎり（梅or昆布）', gBase: 100, calPer100: 168, display: '1個（約100g）' },
+            { name: '豆乳（無調整）', gBase: 200, calPer100: 46, display: '1本（200ml）' },
+          ], totalCal: 404 },
+          { maxCal: 9999, items: [
+            { name: 'サラダチキン（プレーン）', gBase: 115, calPer100: 125, display: '1袋（115g）' },
+            { name: 'おにぎり×2', gBase: 200, calPer100: 168, display: '2個（約200g）' },
+            { name: '豆乳（無調整）', gBase: 200, calPer100: 46, display: '1本（200ml）' },
+            { name: 'バナナ', gBase: 75, calPer100: 86, fiber: 's', display: '1/2本（75g）' },
+          ], totalCal: 538 },
+        ],
+        gut: '豆乳は植物性タンパク質＋イソフラボンが摂れる。バナナの水溶性食物繊維で腸活も✨'
+      },
     ],
     lazy: [
       { name: 'ズボラ混ぜるだけ朝食', lazy: true, items: [
         { name: 'ギリシャヨーグルト（無糖）', gBase: 200, calPer100: CAL.yogurt_plain, ferment: true },
-        { name: 'バナナ', gBase: 150, calPer100: CAL.banana, fiber: 's', fixed: true, display: '1本' },
-        { name: 'ゆで卵（前日に茹でる）', gBase: 100, calPer100: CAL.egg, fixed: true, display: '2個' },
+        { name: 'バナナ', gBase: 150, calPer100: CAL.banana, fiber: 's', fixed: true, display: '1本（150g）' },
+        { name: 'ゆで卵（前日に茹でる）', gBase: 100, calPer100: CAL.egg, fixed: true, display: '2個（100g）' },
         { name: '素焼きナッツ', gBase: 20, calPer100: CAL.nuts },
       ], gut: '包丁も火も使わない完全ズボラ朝食。ヨーグルト＋バナナで腸活もできるよ。卵は前日の夜にまとめて茹でておくと楽✨' },
       { name: 'レンチン納豆オートミール', lazy: true, items: [
         { name: 'オートミール', gBase: 50, calPer100: CAL.oatmeal, fiber: 's', isOatmeal: true },
-        { name: '卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
-        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, fixed: true, display: '1パック' },
+        { name: '卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個（50g）' },
+        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, isPack: true, display: '1パック（50g）' },
         { name: '醤油', gBase: 5, calPer100: 71, fixed: true, display: '少々' },
       ], gut: 'レンジ3分で完成。オートミール（水溶性）＋納豆（水溶性・発酵）で腸活最強の組み合わせだよ✊' },
+      { name: 'ズボラ豆乳バナナスムージー', lazy: true, items: [
+        { name: '豆乳（無調整）', gBase: 200, calPer100: 46, fixed: true, display: '200ml' },
+        { name: 'バナナ', gBase: 150, calPer100: CAL.banana, fiber: 's', fixed: true, display: '1本（150g）' },
+        { name: 'ゆで卵', gBase: 100, calPer100: CAL.egg, fixed: true, display: '2個（100g）' },
+        { name: 'オートミール', gBase: 30, calPer100: CAL.oatmeal, fiber: 's', isOatmeal: true },
+      ], gut: '混ぜるだけの超ズボラ朝食。豆乳＋バナナ＋オートミールで水溶性食物繊維と植物性タンパク質が一気に摂れるよ' },
     ],
   },
   lunch: {
     normal: [
+      // ちゃんと調理する通常版（缶詰開けるだけはズボラに）
       { name: '鶏むね肉チンジャオロース風', items: [
         { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
         { name: '鶏むね肉（皮なし）', gBase: 120, calPer100: CAL.chicken_breast },
         { name: 'ピーマン・パプリカ', gBase: 100, calPer100: CAL.paprika, fiber: 'i' },
         { name: 'たけのこ', gBase: 60, calPer100: 27, fiber: 'i' },
         { name: 'しめじ', gBase: 50, calPer100: CAL.mushroom_mix, fiber: 'b' },
-      ], gut: 'ピーマン・パプリカの不溶性食物繊維としめじ（水溶性・不溶性）を組み合わせた腸活サポートの一品だよ' },
+      ], gut: 'ピーマン・パプリカはビタミンCが豊富でコラーゲン合成を助けてくれる。しめじで食物繊維も両方摂れるよ' },
       { name: 'キャベツと鶏むね肉の甘辛炒め', items: [
         { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
         { name: '鶏むね肉（皮なし）', gBase: 120, calPer100: CAL.chicken_breast },
         { name: 'キャベツ', gBase: 150, calPer100: CAL.cabbage, fiber: 'i' },
         { name: 'わかめ味噌汁', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
       ], gut: 'キャベツの不溶性食物繊維が腸の動きをサポート。わかめ味噌汁で水溶性と発酵食品もプラスだよ✊' },
-      { name: 'ツナとひじきの混ぜご飯定食', items: [
+      { name: '豆腐と鶏肉の麻婆丼', items: [
         { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
-        { name: 'ツナ缶（水煮）', gBase: 70, calPer100: CAL.tuna_can, fixed: true, display: '1缶（70g）' },
-        { name: 'ひじきの煮物', gBase: 60, calPer100: CAL.hijiki_cooked, fiber: 's' },
-        { name: 'ブロッコリー蒸し', gBase: 100, calPer100: CAL.broccoli, fiber: 'i' },
-        { name: 'きのこ味噌汁', gBase: 150, calPer100: 18, fiber: 'b', ferment: true, fixed: true, display: '1杯' },
-      ], gut: 'ひじきで水溶性、ブロッコリーで不溶性、きのこで両方補える。食物繊維のバランスが特に良い献立だよ✊' },
-      { name: 'さば缶定食', items: [
-        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
-        { name: 'さば水煮缶', gBase: 190, calPer100: CAL.mackerel_can, fixed: true, display: '1缶（190g）' },
-        { name: 'ごぼうサラダ', gBase: 80, calPer100: CAL.burdock, fiber: 'i' },
-        { name: 'わかめ豆腐味噌汁', gBase: 150, calPer100: 18, fiber: 's', ferment: true, fixed: true, display: '1杯' },
-      ], gut: 'ごぼうは不溶性食物繊維の王様。わかめ味噌汁の水溶性と合わせて理想の1：2バランスに近づけてるよ✨' },
+        { name: '絹ごし豆腐', gBase: 150, calPer100: CAL.tofu_silk },
+        { name: '鶏ひき肉', gBase: 80, calPer100: CAL.ground_chicken },
+        { name: 'しいたけ・しめじ', gBase: 80, calPer100: CAL.shiitake, fiber: 'b' },
+        { name: '小松菜', gBase: 100, calPer100: CAL.komatsuna, fiber: 'i' },
+      ], gut: 'きのこは水溶性・不溶性どちらも含む万能食材。小松菜の不溶性食物繊維と組み合わせることで腸の動きをサポートするよ' },
       { name: '麻婆白菜丼', items: [
         { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
         { name: '豚もも肉（ひき肉）', gBase: 80, calPer100: CAL.pork_loin },
@@ -443,40 +535,133 @@ const DB = {
         { name: '豚もも肉', gBase: 100, calPer100: CAL.pork_loin },
         { name: '海藻サラダ（わかめ・ひじき）', gBase: 80, calPer100: 20, fiber: 's' },
         { name: 'レタス・きゅうり', gBase: 100, calPer100: 13, fiber: 'i' },
+        { name: 'わかめ味噌汁', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
       ], gut: '海藻サラダを加えることでサラダでも水溶性食物繊維がちゃんと摂れる。葉野菜だけじゃなく海藻も意識してね🌿' },
+      { name: '豆腐ハンバーグ定食', items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: '豆腐ハンバーグ（大豆入り）', gBase: 130, calPer100: CAL.tofu_hamburg, fiber: 'i' },
+        { name: 'きのこソース', gBase: 80, calPer100: CAL.mushroom_mix, fiber: 'b' },
+        { name: '蒸しブロッコリー', gBase: 100, calPer100: CAL.broccoli, fiber: 'i' },
+        { name: 'わかめ味噌汁', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+      ], gut: '大豆とブロッコリーの不溶性食物繊維がしっかり摂れる。きのこソースで両方の食物繊維もプラスできてるよ✊' },
+      // パスタ枠（管理栄養士推奨：全粒粉または茹で後149kcal/100g）
+      { name: 'えびとアボカドの和風パスタ', items: [
+        { name: 'パスタ（茹で後）', gBase: 200, calPer100: 149, fiber: 'i', isStaple: true },
+        { name: 'えび', gBase: 80, calPer100: CAL.shrimp },
+        { name: 'アボカド', gBase: 70, calPer100: CAL.avocado, fiber: 's', fixed: true, display: '1/2個（70g）' },
+        { name: 'ほうれん草', gBase: 60, calPer100: CAL.spinach, fiber: 'i' },
+      ], gut: 'パスタは意外と食物繊維が含まれてる。アボカドの水溶性とほうれん草の不溶性も補えてバランスがいいよ。週1回のちょい変化メニューとして◎' },
+      { name: '鮭と野菜のペンネ', items: [
+        { name: 'ペンネ（茹で後）', gBase: 200, calPer100: 149, fiber: 'i', isStaple: true },
+        { name: '鮭（缶or切り身）', gBase: 80, calPer100: CAL.salmon },
+        { name: 'ほうれん草', gBase: 80, calPer100: CAL.spinach, fiber: 'i' },
+        { name: 'しめじ', gBase: 60, calPer100: CAL.mushroom_mix, fiber: 'b' },
+      ], gut: '鮭のDHA・EPAと野菜の食物繊維が一緒に摂れる。パスタでも野菜をたっぷり入れることで腸活もできるよ🌿' },
+      // Nadia参考
+      { name: '鶏むね肉と舞茸のふわ玉和風あんかけ丼', items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: '鶏むね肉（皮なし）', gBase: 100, calPer100: CAL.chicken_breast },
+        { name: '舞茸', gBase: 80, calPer100: CAL.mushroom_mix, fiber: 'b' },
+        { name: '卵', gBase: 100, calPer100: CAL.egg },
+        { name: 'わかめ味噌汁', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+      ], gut: '舞茸は食物繊維だけでなくβグルカンという免疫を高める成分も含んでいる。ふわふわ卵でタンパク質もしっかり補給できるよ✊' },
+      { name: 'ささみの大葉ごま焼き定食', items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: '鶏ささ身', gBase: 150, calPer100: CAL.chicken_sasami },
+        { name: '大葉・白ごま', gBase: 10, calPer100: 50, fixed: true, display: '大葉5枚・白ごま適量' },
+        { name: 'ブロッコリー蒸し', gBase: 100, calPer100: CAL.broccoli, fiber: 'i' },
+        { name: 'わかめ豆腐味噌汁', gBase: 150, calPer100: 18, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+      ], gut: 'ささ身は鶏肉で最も低カロリー・高タンパクな部位。大葉の香りで食欲がない日も食べやすい。ブロッコリーで不溶性食物繊維も補給できるよ' },
     ],
     convenience: [
-      { name: 'コンビニランチ①サラダチキン丼', conv: true, items: [
-        { name: 'おにぎり×2（鮭・梅）', gBase: 200, calPer100: 168, fixed: true, display: '2個（約200g）' },
-        { name: 'サラダチキン', gBase: 115, calPer100: CAL.chicken_breast, fixed: true, display: '1袋' },
-        { name: '野菜サラダ', gBase: 100, calPer100: 15, fiber: 'i', fixed: true, display: '1袋' },
-        { name: 'わかめスープ（インスタント）', gBase: 150, calPer100: 7, fiber: 's', fixed: true, display: '1杯' },
-      ], gut: 'サラダチキンはコンビニ最強のタンパク源。わかめスープを足すことで水溶性食物繊維も補給できるよ✊' },
-      { name: 'コンビニランチ②そば＋ゆで卵', conv: true, items: [
-        { name: 'ざるそば or 温玉そば', gBase: 200, calPer100: 100, fixed: true, display: '1杯' },
-        { name: 'ゆで卵', gBase: 100, calPer100: CAL.egg, fixed: true, display: '2個' },
-        { name: 'ヨーグルト（無糖）', gBase: 100, calPer100: CAL.yogurt_plain, ferment: true, fixed: true, display: '1個' },
-      ], gut: 'そばは食物繊維が豊富でGIが低め。ヨーグルトで発酵食品も一緒に摂れるコンビニランチだよ🌿' },
-      { name: 'コンビニランチ③納豆巻きセット', conv: true, items: [
-        { name: '納豆巻き or 納豆おにぎり', gBase: 180, calPer100: 140, fiber: 's', ferment: true, fixed: true, display: '1〜2本' },
-        { name: 'サラダチキン', gBase: 115, calPer100: CAL.chicken_breast, fixed: true, display: '1袋' },
-        { name: 'ヨーグルト（無糖）', gBase: 100, calPer100: CAL.yogurt_plain, ferment: true, fixed: true, display: '1個' },
-      ], gut: '納豆巻きなら発酵食品も一緒に摂れる。ヨーグルトで腸活ダブル効果だよ🌿' },
+      {
+        name: 'コンビニランチ①サラダチキン定食', isConv: true,
+        patterns: [
+          { maxCal: 420, items: [
+            { name: 'おにぎり（鮭or梅）', gBase: 100, calPer100: 168, display: '1個（約100g）' },
+            { name: 'サラダチキン', gBase: 115, calPer100: 125, display: '1袋（115g）' },
+            { name: 'わかめスープ（インスタント）', gBase: 150, calPer100: 5, fiber: 's', display: '1杯' },
+          ], totalCal: 418 },
+          { maxCal: 520, items: [
+            { name: 'おにぎり×2（鮭・梅）', gBase: 200, calPer100: 168, display: '2個（約200g）' },
+            { name: 'サラダチキン', gBase: 115, calPer100: 125, display: '1袋（115g）' },
+            { name: '野菜サラダ', gBase: 100, calPer100: 15, fiber: 'i', display: '1袋' },
+            { name: 'わかめスープ（インスタント）', gBase: 150, calPer100: 5, fiber: 's', display: '1杯' },
+          ], totalCal: 497 },
+          { maxCal: 9999, items: [
+            { name: 'おにぎり×2（鮭・梅）', gBase: 200, calPer100: 168, display: '2個（約200g）' },
+            { name: 'サラダチキン', gBase: 115, calPer100: 125, display: '1袋（115g）' },
+            { name: '野菜サラダ', gBase: 100, calPer100: 15, fiber: 'i', display: '1袋' },
+            { name: 'ゆで卵', gBase: 50, calPer100: 154, display: '1個（50g）' },
+            { name: 'わかめスープ（インスタント）', gBase: 150, calPer100: 5, fiber: 's', display: '1杯' },
+          ], totalCal: 574 },
+        ],
+        gut: 'サラダチキンはコンビニ最強のタンパク源。わかめスープで水溶性食物繊維も補給できるよ✊'
+      },
+      {
+        name: 'コンビニランチ②そば＋ゆで卵', isConv: true,
+        patterns: [
+          { maxCal: 420, items: [
+            { name: 'ざるそば（コンビニ）', gBase: 200, calPer100: 130, display: '1杯（約200g）' },
+            { name: 'ゆで卵', gBase: 50, calPer100: 154, display: '1個（50g）' },
+          ], totalCal: 337 },
+          { maxCal: 520, items: [
+            { name: 'ざるそば（コンビニ）', gBase: 200, calPer100: 130, display: '1杯（約200g）' },
+            { name: 'ゆで卵', gBase: 100, calPer100: 154, display: '2個（100g）' },
+            { name: 'ヨーグルト（無糖）', gBase: 100, calPer100: 62, ferment: true, display: '1個（100g）' },
+          ], totalCal: 484 },
+          { maxCal: 9999, items: [
+            { name: 'ざるそば（コンビニ）', gBase: 200, calPer100: 130, display: '1杯（約200g）' },
+            { name: 'ゆで卵', gBase: 100, calPer100: 154, display: '2個（100g）' },
+            { name: 'ヨーグルト（無糖）', gBase: 100, calPer100: 62, ferment: true, display: '1個（100g）' },
+            { name: 'バナナ', gBase: 75, calPer100: 86, fiber: 's', display: '1/2本（75g）' },
+          ], totalCal: 549 },
+        ],
+        gut: 'そばはGIが低く血糖値の上昇がゆるやか。ヨーグルトで発酵食品も一緒に摂れるコンビニランチだよ🌿'
+      },
+      {
+        name: 'コンビニランチ③海藻サラダ定食', isConv: true,
+        patterns: [
+          { maxCal: 420, items: [
+            { name: 'おにぎり（鮭or昆布）', gBase: 100, calPer100: 168, display: '1個（約100g）' },
+            { name: 'ゆで卵', gBase: 100, calPer100: 154, display: '2個（100g）' },
+            { name: '海藻サラダ', gBase: 80, calPer100: 20, fiber: 's', display: '1袋（80g）' },
+          ], totalCal: 338 },
+          { maxCal: 520, items: [
+            { name: 'おにぎり×2（鮭・梅）', gBase: 200, calPer100: 168, display: '2個（約200g）' },
+            { name: 'ゆで卵', gBase: 100, calPer100: 154, display: '2個（100g）' },
+            { name: '海藻サラダ', gBase: 80, calPer100: 20, fiber: 's', display: '1袋（80g）' },
+          ], totalCal: 506 },
+          { maxCal: 9999, items: [
+            { name: 'おにぎり×2（鮭・梅）', gBase: 200, calPer100: 168, display: '2個（約200g）' },
+            { name: 'サラダチキン', gBase: 115, calPer100: 125, display: '1袋（115g）' },
+            { name: '海藻サラダ', gBase: 80, calPer100: 20, fiber: 's', display: '1袋（80g）' },
+            { name: 'ヨーグルト（無糖）', gBase: 100, calPer100: 62, ferment: true, display: '1個（100g）' },
+          ], totalCal: 560 },
+        ],
+        gut: '海藻サラダで水溶性食物繊維をコンビニでもしっかり補給。葉野菜だけのサラダより腸活効果が高いよ✊'
+      },
     ],
     lazy: [
       { name: 'ズボラツナ納豆丼', lazy: true, items: [
         { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
-        { name: 'ツナ缶（水煮）', gBase: 70, calPer100: CAL.tuna_can, fixed: true, display: '1缶' },
-        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, fixed: true, display: '1パック' },
-        { name: '卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個' },
-        { name: 'わかめ（乾燥）戻して', gBase: 20, calPer100: CAL.wakame_wet, fiber: 's', fixed: true, display: '少々' },
+        { name: 'ツナ缶（水煮）', gBase: 70, calPer100: CAL.tuna_can, isCan: true, display: '1缶（70g）' },
+        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, isPack: true, display: '1パック（50g）' },
+        { name: '卵', gBase: 50, calPer100: CAL.egg, fixed: true, display: '1個（50g）' },
+        { name: 'わかめ（乾燥）', gBase: 5, calPer100: CAL.wakame_wet, fiber: 's', fixed: true, display: '少々' },
       ], gut: '全部混ぜるだけのズボラ丼。ツナ＋納豆＋卵でタンパク質もしっかり。わかめで食物繊維もプラスだよ' },
-      { name: 'ズボラ冷奴＋さば缶定食', lazy: true, items: [
+      { name: 'ズボラさば缶定食', lazy: true, items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: 'さば水煮缶', gBase: 190, calPer100: CAL.mackerel_can, isCan: true, display: '1缶（190g）' },
+        { name: 'ごぼうサラダ（市販）', gBase: 60, calPer100: 65, fiber: 'i', fixed: true, display: '1袋（60g）' },
+        { name: 'わかめ豆腐味噌汁', gBase: 150, calPer100: 18, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+      ], gut: 'さば缶は缶を開けるだけでDHA・EPAが摂れる優秀食材。ごぼうの不溶性食物繊維と合わせてバランスもいいよ✊' },
+      { name: 'ズボラ冷奴＋ひじき煮定食', lazy: true, items: [
         { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
         { name: '絹ごし豆腐', gBase: 150, calPer100: CAL.tofu_silk, fixed: true, display: '1/2丁（150g）' },
-        { name: 'さば水煮缶', gBase: 95, calPer100: CAL.mackerel_can, fixed: true, display: '1/2缶' },
+        { name: 'ひじきの煮物（市販）', gBase: 60, calPer100: CAL.hijiki_cooked, fiber: 's', fixed: true, display: '1袋（60g）' },
         { name: 'わかめ味噌汁（インスタント）', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
-      ], gut: '豆腐もさば缶も開けるだけ。ほぼ調理不要なのにタンパク質と腸活食材がしっかり揃ってるよ✨' },
+      ], gut: '豆腐もひじきの煮物も開けるだけ。ひじきの水溶性食物繊維と味噌汁の発酵でしっかり腸活できるよ✨' },
     ],
   },
   dinner: {
@@ -494,7 +679,7 @@ const DB = {
         { name: 'キャベツ・もやし・ほうれん草', gBase: 200, calPer100: 18, fiber: 'i' },
         { name: 'わかめ', gBase: 20, calPer100: CAL.wakame_wet, fiber: 's' },
         { name: 'しめじ', gBase: 50, calPer100: CAL.mushroom_mix, fiber: 'b' },
-      ], gut: '温野菜にすることで生より多くの食物繊維が摂れる。キャベツ・もやしの不溶性とわかめの水溶性でバランス良いよ' },
+      ], gut: '温野菜にすることで生より量が食べられる。キャベツ・もやしの不溶性とわかめの水溶性でバランスいいよ' },
       { name: '鶏肉ときのこのホイル焼き', items: [
         { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
         { name: '鶏むね肉（皮なし）', gBase: 120, calPer100: CAL.chicken_breast },
@@ -502,9 +687,9 @@ const DB = {
         { name: '玉ねぎ', gBase: 80, calPer100: 37, fiber: 'i' },
         { name: 'わかめ味噌汁', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
       ], gut: 'ホイル焼きは油なしで調理できるから低カロリー。まいたけ・しめじの食物繊維がしっかり摂れるよ✊' },
-      { name: 'こんにゃくと根菜の煮物定食', items: [
+      { name: 'さばと根菜の煮物定食', items: [
         { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
-        { name: 'さば水煮缶', gBase: 190, calPer100: CAL.mackerel_can, fixed: true, display: '1缶（190g）' },
+        { name: 'さば（切り身）', gBase: 100, calPer100: CAL.mackerel },
         { name: 'こんにゃく', gBase: 100, calPer100: CAL.konjac, fiber: 's' },
         { name: 'ごぼう', gBase: 80, calPer100: CAL.burdock, fiber: 'i' },
         { name: 'わかめスープ', gBase: 150, calPer100: 7, fiber: 's', fixed: true, display: '1杯' },
@@ -529,7 +714,7 @@ const DB = {
         { name: '木綿豆腐', gBase: 150, calPer100: CAL.tofu_firm },
         { name: 'キムチ', gBase: 80, calPer100: CAL.kimchi, ferment: true, fixed: true, display: '80g' },
         { name: 'えのき・もやし・ニラ', gBase: 180, calPer100: 18, fiber: 'i' },
-      ], gut: 'キムチは発酵食品の中でも特に乳酸菌が豊富。野菜の食物繊維と一緒に摂ることで善玉菌のエサになって腸活効果が高まるよ🌿' },
+      ], gut: 'キムチは最後に加えると乳酸菌が生きたまま摂れる。野菜の食物繊維と一緒に摂ることで善玉菌のエサになって腸活効果が高まるよ🌿' },
       { name: '豚しゃぶきのこ鍋', items: [
         { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
         { name: '豚もも肉', gBase: 120, calPer100: CAL.pork_loin },
@@ -537,21 +722,109 @@ const DB = {
         { name: '白菜・ほうれん草', gBase: 160, calPer100: 14, fiber: 'i' },
         { name: 'ひじき', gBase: 10, calPer100: CAL.hijiki_dry, fiber: 's' },
       ], gut: 'きのこたっぷりの鍋は腸活に最適。白菜・ほうれん草の不溶性とひじきの水溶性で理想のバランスが取れてるよ' },
+      // 管理栄養士推奨・調理師目線追加メニュー
+      { name: '鮭の塩麹焼き定食', items: [
+        { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
+        { name: 'さけ', gBase: 100, calPer100: CAL.salmon },
+        { name: '塩麹', gBase: 20, calPer100: 60, ferment: true, fixed: true, display: '大さじ1（20g）' },
+        { name: 'ブロッコリー・人参', gBase: 120, calPer100: 36, fiber: 'i' },
+        { name: 'わかめとなめこの味噌汁', gBase: 150, calPer100: 18, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+      ], gut: '塩麹は発酵食品で、鮭を漬けることで旨みが増してタンパク質の吸収も上がる。調理師目線でもおすすめの調理法だよ✊' },
+      { name: 'ひじきたっぷり豆腐チャンプルー', items: [
+        { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
+        { name: '木綿豆腐', gBase: 150, calPer100: CAL.tofu_firm },
+        { name: '豚もも肉', gBase: 80, calPer100: CAL.pork_loin },
+        { name: 'ひじき（乾燥→戻し）', gBase: 20, calPer100: CAL.hijiki_dry, fiber: 's' },
+        { name: 'ほうれん草', gBase: 80, calPer100: CAL.spinach, fiber: 'i' },
+        { name: '卵', gBase: 50, calPer100: CAL.egg },
+      ], gut: 'ひじきは鉄分・カルシウムも豊富で産後の栄養回復にぴったり。木綿豆腐で炒り豆腐にすることで食べ応えがアップするよ🌿' },
+      { name: '甘辛豆腐ステーキ定食', items: [
+        { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
+        { name: '木綿豆腐', gBase: 200, calPer100: CAL.tofu_firm },
+        { name: 'えのき・もやし', gBase: 100, calPer100: 18, fiber: 'i' },
+        { name: '小松菜', gBase: 80, calPer100: CAL.komatsuna, fiber: 'i' },
+        { name: 'わかめ味噌汁', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
+      ], gut: '豆腐を電子レンジで水切りしてしっかり焼くと肉のような食べ応えが出る。甘辛ダレと組み合わせることで満足度が高い低カロリーメニューになるよ✊' },
+      { name: 'レンチン蒸し鶏の塩玉ねぎがけ', quick: true, items: [
+        { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
+        { name: '鶏むね肉（皮なし）', gBase: 150, calPer100: CAL.chicken_breast },
+        { name: '玉ねぎ（薄切り）', gBase: 60, calPer100: 37, fiber: 'i' },
+        { name: 'レタス・きゅうり', gBase: 100, calPer100: 13, fiber: 'i' },
+        { name: 'きのこ味噌汁', gBase: 150, calPer100: 18, fiber: 'b', ferment: true, fixed: true, display: '1杯' },
+      ], gut: 'レンチン蒸し鶏はクレライフ式。塩玉ねぎのタレは玉ねぎの辛味を活かしてさっぱり食べられる。忙しい夜に最適だよ✨' },
     ],
     convenience: [
-      { name: 'コンビニ夕食①鍋セット＋ご飯', conv: true, items: [
-        { name: '__RICE__', gBase: 100, calPer100: 0, isRice: true, isStaple: true },
-        { name: 'サラダチキン', gBase: 115, calPer100: CAL.chicken_breast, fixed: true, display: '1袋' },
-        { name: 'カット野菜（鍋用）', gBase: 200, calPer100: 18, fiber: 'i', fixed: true, display: '1袋' },
-        { name: 'きのこミックス（冷凍）', gBase: 100, calPer100: CAL.mushroom_mix, fiber: 'b', fixed: true, display: '適量' },
-        { name: 'わかめスープ', gBase: 150, calPer100: 7, fiber: 's', fixed: true, display: '1杯' },
-      ], gut: 'コンビニのカット野菜＋きのこで食物繊維を補給。わかめスープで水溶性もプラスできるよ🌿' },
-      { name: 'コンビニ夕食②ゆで卵＋納豆丼', conv: true, items: [
-        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
-        { name: 'ゆで卵', gBase: 100, calPer100: CAL.egg, fixed: true, display: '2個' },
-        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, fixed: true, display: '1パック' },
-        { name: 'わかめ味噌汁（インスタント）', gBase: 150, calPer100: CAL.miso_soup, fiber: 's', ferment: true, fixed: true, display: '1杯' },
-      ], gut: '納豆＋味噌汁で発酵食品ダブル。わかめで水溶性食物繊維も補給。疲れた夜でも続けやすい献立だよ✊' },
+      {
+        name: 'コンビニ夕食①カット野菜＋サラダチキン', isConv: true,
+        patterns: [
+          { maxCal: 350, items: [
+            { name: 'おにぎり（鮭or梅）', gBase: 100, calPer100: 168, display: '1個（約100g）' },
+            { name: 'サラダチキン', gBase: 115, calPer100: 125, display: '1袋（115g）' },
+            { name: 'カット野菜（鍋・サラダ用）', gBase: 150, calPer100: 18, fiber: 'i', display: '1袋（150g）' },
+          ], totalCal: 340 },
+          { maxCal: 450, items: [
+            { name: 'おにぎり×2（鮭・梅）', gBase: 200, calPer100: 168, display: '2個（約200g）' },
+            { name: 'サラダチキン', gBase: 115, calPer100: 125, display: '1袋（115g）' },
+            { name: 'カット野菜', gBase: 150, calPer100: 18, fiber: 'i', display: '1袋（150g）' },
+            { name: 'わかめスープ', gBase: 150, calPer100: 5, fiber: 's', display: '1杯' },
+          ], totalCal: 421 },
+          { maxCal: 9999, items: [
+            { name: 'おにぎり×2（鮭・梅）', gBase: 200, calPer100: 168, display: '2個（約200g）' },
+            { name: 'サラダチキン', gBase: 115, calPer100: 125, display: '1袋（115g）' },
+            { name: 'カット野菜', gBase: 150, calPer100: 18, fiber: 'i', display: '1袋（150g）' },
+            { name: 'ゆで卵', gBase: 100, calPer100: 154, display: '2個（100g）' },
+            { name: 'わかめスープ', gBase: 150, calPer100: 5, fiber: 's', display: '1杯' },
+          ], totalCal: 575 },
+        ],
+        gut: 'カット野菜で食物繊維をしっかり補給。わかめスープで水溶性もプラスできるよ🌿'
+      },
+      {
+        name: 'コンビニ夕食②納豆ご飯定食', isConv: true,
+        patterns: [
+          { maxCal: 350, items: [
+            { name: 'おにぎり（梅or昆布）', gBase: 100, calPer100: 168, display: '1個（約100g）' },
+            { name: '納豆', gBase: 50, calPer100: 200, fiber: 's', ferment: true, display: '1パック（50g）' },
+            { name: 'ゆで卵', gBase: 50, calPer100: 154, display: '1個（50g）' },
+          ], totalCal: 344 },
+          { maxCal: 450, items: [
+            { name: 'おにぎり×2（梅・昆布）', gBase: 200, calPer100: 168, display: '2個（約200g）' },
+            { name: '納豆', gBase: 50, calPer100: 200, fiber: 's', ferment: true, display: '1パック（50g）' },
+            { name: 'ゆで卵', gBase: 50, calPer100: 154, display: '1個（50g）' },
+            { name: 'わかめ味噌汁（インスタント）', gBase: 150, calPer100: 15, fiber: 's', ferment: true, display: '1杯' },
+          ], totalCal: 438 },
+          { maxCal: 9999, items: [
+            { name: 'おにぎり×2（梅・昆布）', gBase: 200, calPer100: 168, display: '2個（約200g）' },
+            { name: '納豆', gBase: 50, calPer100: 200, fiber: 's', ferment: true, display: '1パック（50g）' },
+            { name: 'ゆで卵', gBase: 100, calPer100: 154, display: '2個（100g）' },
+            { name: 'わかめ味噌汁（インスタント）', gBase: 150, calPer100: 15, fiber: 's', ferment: true, display: '1杯' },
+            { name: '海藻サラダ', gBase: 80, calPer100: 20, fiber: 's', display: '1袋（80g）' },
+          ], totalCal: 558 },
+        ],
+        gut: '納豆＋味噌汁で発酵食品ダブル。疲れた夜でも続けやすくてしっかりカロリー内に収まるよ✊'
+      },
+      {
+        name: 'コンビニ夕食③豆腐＋サラダチキン', isConv: true,
+        patterns: [
+          { maxCal: 350, items: [
+            { name: 'おにぎり（鮭）', gBase: 100, calPer100: 168, display: '1個（約100g）' },
+            { name: 'サラダチキン', gBase: 115, calPer100: 125, display: '1袋（115g）' },
+            { name: '冷奴（豆腐）', gBase: 150, calPer100: 56, display: '1パック（150g）' },
+          ], totalCal: 328 },
+          { maxCal: 450, items: [
+            { name: 'おにぎり×2（鮭・梅）', gBase: 200, calPer100: 168, display: '2個（約200g）' },
+            { name: 'サラダチキン', gBase: 115, calPer100: 125, display: '1袋（115g）' },
+            { name: '冷奴（豆腐）', gBase: 150, calPer100: 56, display: '1パック（150g）' },
+          ], totalCal: 496 },
+          { maxCal: 9999, items: [
+            { name: 'おにぎり×2（鮭・梅）', gBase: 200, calPer100: 168, display: '2個（約200g）' },
+            { name: 'サラダチキン', gBase: 115, calPer100: 125, display: '1袋（115g）' },
+            { name: '冷奴（豆腐）', gBase: 150, calPer100: 56, display: '1パック（150g）' },
+            { name: '海藻サラダ', gBase: 80, calPer100: 20, fiber: 's', display: '1袋（80g）' },
+            { name: 'ヨーグルト（無糖）', gBase: 100, calPer100: 62, ferment: true, display: '1個（100g）' },
+          ], totalCal: 558 },
+        ],
+        gut: '豆腐で大豆タンパク質が摂れる。海藻サラダとヨーグルトを加えることで腸活も十分できるよ✨'
+      },
     ],
     lazy: [
       { name: 'ズボラレンチン蒸し鶏丼', lazy: true, items: [
@@ -562,10 +835,16 @@ const DB = {
       ], gut: '鶏むね肉はレンジ加熱で簡単に調理できる。冷凍ブロッコリーは解凍するだけでOK。ズボラでも腸活食材が揃うよ✨' },
       { name: 'ズボラさば缶丼', lazy: true, items: [
         { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
-        { name: 'さば水煮缶', gBase: 190, calPer100: CAL.mackerel_can, fixed: true, display: '1缶' },
-        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, fixed: true, display: '1パック' },
+        { name: 'さば水煮缶', gBase: 190, calPer100: CAL.mackerel_can, isCan: true, display: '1缶（190g）' },
+        { name: '納豆', gBase: 50, calPer100: CAL.natto, fiber: 's', ferment: true, isPack: true, display: '1パック（50g）' },
         { name: 'わかめ（乾燥）', gBase: 5, calPer100: CAL.wakame_wet, fiber: 's', fixed: true, display: '少々' },
       ], gut: 'さば缶を開けてご飯に乗せるだけ。納豆（発酵・水溶性）＋わかめ（水溶性）で腸活もバッチリだよ' },
+      { name: 'ズボラキムチ豆腐丼', lazy: true, items: [
+        { name: '__RICE__', gBase: 150, calPer100: 0, isRice: true, isStaple: true },
+        { name: '絹ごし豆腐', gBase: 150, calPer100: CAL.tofu_silk, fixed: true, display: '1/2丁（150g）' },
+        { name: 'キムチ', gBase: 80, calPer100: CAL.kimchi, ferment: true, fixed: true, display: '80g' },
+        { name: 'ゆで卵', gBase: 100, calPer100: CAL.egg, fixed: true, display: '2個（100g）' },
+      ], gut: '豆腐を開けてご飯に乗せ、キムチを乗せるだけ。発酵食品のキムチ＋大豆タンパク質で満足感もあるよ🌿' },
     ],
   },
 };
@@ -598,25 +877,60 @@ function getItemCal(item, riceCalPer100) {
 function adjustMeal(template, targetCal, riceType) {
   const riceConf = RICE_CONFIG[riceType];
   const rcp = riceConf.calPer100;
-  const fixedCal = template.items.filter(i => i.fixed).reduce((s, i) => s + getItemCal(i, rcp), 0);
-  const scalableBase = template.items.filter(i => !i.fixed).reduce((s, i) => s + getItemCal(i, rcp), 0);
-  const scalableTarget = Math.max(targetCal - fixedCal, 0);
-  const ratio = scalableBase > 0 ? scalableTarget / scalableBase : 1;
+
+  // 全食材のベースカロリー合計
+  const totalBase = template.items.reduce((s, i) => s + getItemCal(i, rcp), 0);
+
+  // 目標カロリーに対するスケール比率（全食材を均等にスケール）
+  const ratio = totalBase > 0 ? targetCal / totalBase : 1;
+
+  // 各食材ごとの最低グラム数（缶詰・パック系は下限を設けて極端に少なくしない）
+  const MIN_G = {
+    default: 10,   // 一般食材の最低量
+    staple: 80,    // 主食（ご飯・パスタ等）の最低量
+    oatmeal: 30,   // オートミールの最低量
+    can: 95,       // 缶詰（さば缶190g→最低1/2缶）
+    pack: 30,      // パック系（納豆など）
+  };
 
   const items = [];
   let rawCal = 0;
 
   template.items.forEach(item => {
     const cp = item.isRice ? rcp : item.calPer100;
-    let g = item.fixed ? item.gBase : item.gBase * ratio;
-    if (item.isStaple) g = Math.min(g, 200);
-    if (item.isOatmeal) g = Math.min(g, 70);
-    if (!item.fixed && g < 5) return;
+
+    // fixedはdisplay文字列が固定されているだけで、グラム数はスケールする
+    let g = item.gBase * ratio;
+
+    // 上限・下限の適用
+    if (item.isStaple)  { g = Math.max(Math.min(g, 250), MIN_G.staple); }
+    else if (item.isOatmeal) { g = Math.max(Math.min(g, 80), MIN_G.oatmeal); }
+    else if (item.isCan)     { g = Math.max(g, MIN_G.can); }
+    else if (item.isPack)    { g = Math.max(g, MIN_G.pack); }
+    else                     { g = Math.max(g, MIN_G.default); }
+
     rawCal += g * cp / 100;
     const name = item.name === '__RICE__' ? riceConf.name : item.name;
     const fiber = item.isRice ? riceConf.fiber : item.fiber;
-    const display = item.display ? item.display : `${Math.round(g / 5) * 5}g`;
-    items.push({ name, amount: display, fiber, ferment: item.ferment });
+
+    // グラム数をスケールした値で表示（固定display指定がある場合は元のdisplayは使わず量を表示）
+    let displayText;
+    if (item.isCan) {
+      // 缶詰は缶数で表示
+      const cans = g / item.gBase;
+      displayText = cans >= 0.9 ? `1缶（${item.gBase}g）` : `${Math.round(g)}g`;
+    } else if (item.isPack) {
+      displayText = `1パック（${Math.round(g)}g）`;
+    } else if (item.isRice || item.isStaple || item.isOatmeal) {
+      displayText = `${Math.round(g / 5) * 5}g`;
+    } else if (item.fixed && item.display && ratio > 0.8 && ratio < 1.2) {
+      // カロリーが近い場合は元のdisplay文字列を使う
+      displayText = item.display;
+    } else {
+      displayText = `${Math.round(g / 5) * 5}g`;
+    }
+
+    items.push({ name, amount: displayText, fiber, ferment: item.ferment });
   });
 
   return {
@@ -628,6 +942,46 @@ function adjustMeal(template, targetCal, riceType) {
   };
 }
 
+// コンビニ版専用：目標カロリー以下になるパターンを選択（スケーリングなし）
+function adjustConvMeal(template, targetCal) {
+  // patternsがない場合は通常処理にフォールバック
+  if (!template.patterns) {
+    return adjustMeal(template, targetCal, 'white');
+  }
+  // targetCalを超えない最大のパターンを選択
+  // totalCalがtargetCal以下のパターンの中で最もtotalCalが大きいものを選ぶ
+  const valid = template.patterns.filter(p => p.totalCal <= targetCal);
+  const pattern = valid.length > 0
+    ? valid.reduce((a, b) => b.totalCal > a.totalCal ? b : a)
+    : template.patterns[0]; // 全部オーバーする場合は最低パターンを使用
+
+  const items = pattern.items.map(item => ({
+    name: item.name,
+    amount: item.display,
+    fiber: item.fiber || null,
+    ferment: item.ferment || false,
+  }));
+
+  return {
+    name: template.name,
+    conv: true,
+    items,
+    cal: pattern.totalCal,
+    gut: template.gut,
+  };
+}
+
+// 配列をシャッフルして先頭n個を取得（重複なしランダム選択）
+function pickRandom(arr, n) {
+  const shuffled = [...arr].sort(() => Math.random() - 0.5);
+  // n > 配列長の場合は繰り返してn個確保
+  const result = [];
+  while (result.length < n) {
+    result.push(...shuffled);
+  }
+  return result.slice(0, n);
+}
+
 function generateMenu() {
   goScreen(3);
   document.getElementById('loading').style.display = 'block';
@@ -637,16 +991,25 @@ function generateMenu() {
     userData.cal = cal;
     ['normal', 'convenience', 'lazy'].forEach(type => {
       weekMenu[type] = [];
+      const bfList = pickRandom(DB.breakfast[type], 7);
+      const luList = pickRandom(DB.lunch[type], 7);
+      const diList = pickRandom(DB.dinner[type], 7);
+      const snackList = pickRandom(snacks, 7);
+      const tipList   = pickRandom(tips, 7);
       for (let i = 0; i < 7; i++) {
-        const bf = DB.breakfast[type];
-        const lu = DB.lunch[type];
-        const di = DB.dinner[type];
+        const isConv = type === 'convenience';
         weekMenu[type].push({
-          breakfast: adjustMeal(bf[i % bf.length], cal.mealCal.breakfast, cal.riceType),
-          lunch:     adjustMeal(lu[i % lu.length], cal.mealCal.lunch, cal.riceType),
-          dinner:    adjustMeal(di[i % di.length], cal.mealCal.dinner, cal.riceType),
-          snack:     { ...snacks[i % snacks.length], calTarget: cal.mealCal.snack },
-          tip:       tips[i % tips.length],
+          breakfast: isConv
+            ? adjustConvMeal(bfList[i], cal.mealCal.breakfast)
+            : adjustMeal(bfList[i], cal.mealCal.breakfast, cal.riceType),
+          lunch: isConv
+            ? adjustConvMeal(luList[i], cal.mealCal.lunch)
+            : adjustMeal(luList[i], cal.mealCal.lunch, cal.riceType),
+          dinner: isConv
+            ? adjustConvMeal(diList[i], cal.mealCal.dinner)
+            : adjustMeal(diList[i], cal.mealCal.dinner, cal.riceType),
+          snack:  { ...snackList[i], calTarget: cal.mealCal.snack },
+          tip:    tipList[i],
         });
       }
     });
@@ -778,7 +1141,9 @@ function selectDay(idx) {
           ${badgeHtml}
           <span class="meal-cal-badge">${d.cal}kcal</span>
         </div>
-        <div class="meal-name">${d.name}</div>
+        <div class="meal-name">
+          <a href="recipes.html#${d.name.replace(/[^\w\u3040-\u9FFF]/g, '_')}" style="color:var(--dark);text-decoration:none;display:flex;align-items:center;justify-content:space-between;">${d.name}<span style="font-size:11px;color:var(--accent);font-weight:700;white-space:nowrap;margin-left:8px;">レシピ →</span></a>
+        </div>
         <div class="ingredients">${tags}</div>
       </div>
       <div class="gut-tip"><div class="gt-label">🌿 腸活ポイント</div>${d.gut}</div>`;
