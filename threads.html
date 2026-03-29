@@ -1,0 +1,901 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Threads 分析</title>
+<style>
+:root {
+  --bg: #0D0D0D;
+  --surface: #1A1A1A;
+  --surface2: #222;
+  --border: #2E2E2E;
+  --text: #F0F0F0;
+  --text-sub: #777;
+  --text-mid: #AAA;
+  --accent: #A855F7;
+  --accent-dim: #2D1B4E;
+  --green: #22C55E;
+  --red: #EF4444;
+  --yellow: #F59E0B;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* ===== SCREENS ===== */
+.screen { display: none; }
+.screen.active { display: block; }
+
+/* ===== TOKEN SCREEN ===== */
+#tokenScreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+.token-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 40px 36px;
+  width: 100%;
+  max-width: 480px;
+}
+.token-logo {
+  font-size: 28px;
+  font-weight: 800;
+  letter-spacing: -1px;
+  margin-bottom: 6px;
+  background: linear-gradient(135deg, #A855F7, #EC4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.token-sub {
+  font-size: 13px;
+  color: var(--text-sub);
+  margin-bottom: 32px;
+}
+.token-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-mid);
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.token-input-wrap {
+  position: relative;
+  margin-bottom: 12px;
+}
+.token-input-wrap input {
+  width: 100%;
+  padding: 14px 48px 14px 16px;
+  background: var(--surface2);
+  border: 1.5px solid var(--border);
+  border-radius: 12px;
+  color: var(--text);
+  font-size: 13px;
+  font-family: 'SF Mono', 'Fira Code', monospace;
+  outline: none;
+  transition: border-color 0.2s;
+}
+.token-input-wrap input:focus { border-color: var(--accent); }
+.token-toggle {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--text-sub);
+  cursor: pointer;
+  font-size: 16px;
+  padding: 4px;
+}
+.token-save-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 24px;
+  font-size: 12px;
+  color: var(--text-sub);
+  cursor: pointer;
+}
+.token-save-row input[type="checkbox"] { accent-color: var(--accent); cursor: pointer; }
+
+.limit-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+.limit-btn {
+  flex: 1;
+  padding: 10px;
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  background: transparent;
+  color: var(--text-mid);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.limit-btn.active { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+
+.btn-primary {
+  width: 100%;
+  padding: 15px;
+  background: linear-gradient(135deg, #A855F7, #EC4899);
+  border: none;
+  border-radius: 12px;
+  color: white;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  letter-spacing: 0.3px;
+  transition: opacity 0.2s;
+}
+.btn-primary:hover { opacity: 0.88; }
+.btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+.token-error {
+  margin-top: 12px;
+  font-size: 12px;
+  color: var(--red);
+  text-align: center;
+  min-height: 18px;
+}
+
+/* ===== LOADING SCREEN ===== */
+#loadingScreen {
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+  gap: 20px;
+}
+#loadingScreen.active { display: flex; }
+.loading-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-mid);
+}
+.loading-sub {
+  font-size: 12px;
+  color: var(--text-sub);
+  margin-top: -12px;
+}
+.progress-bar-wrap {
+  width: 100%;
+  max-width: 360px;
+  height: 4px;
+  background: var(--border);
+  border-radius: 99px;
+  overflow: hidden;
+}
+.progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #A855F7, #EC4899);
+  border-radius: 99px;
+  transition: width 0.3s;
+  width: 0%;
+}
+.loading-dots span {
+  display: inline-block;
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--accent);
+  margin: 0 3px;
+  animation: bounce 1.2s infinite;
+}
+.loading-dots span:nth-child(2) { animation-delay: 0.2s; }
+.loading-dots span:nth-child(3) { animation-delay: 0.4s; }
+@keyframes bounce {
+  0%, 80%, 100% { transform: scale(0.6); opacity: 0.5; }
+  40% { transform: scale(1); opacity: 1; }
+}
+
+/* ===== DASHBOARD ===== */
+#dashboardScreen { display: none; }
+#dashboardScreen.active { display: block; }
+
+.topbar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(13,13,13,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+}
+.topbar-logo {
+  font-size: 18px;
+  font-weight: 800;
+  background: linear-gradient(135deg, #A855F7, #EC4899);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.topbar-info {
+  font-size: 11px;
+  color: var(--text-sub);
+}
+.btn-logout {
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--text-sub);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-logout:hover { border-color: var(--text-sub); color: var(--text); }
+
+.main {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+/* ===== SUMMARY CARDS ===== */
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+  margin-bottom: 28px;
+}
+.summary-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 18px 20px;
+}
+.summary-label {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-sub);
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
+}
+.summary-value {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.summary-sub {
+  font-size: 11px;
+  color: var(--text-sub);
+  margin-top: 4px;
+}
+.c-purple { color: #A855F7; }
+.c-blue   { color: #60A5FA; }
+.c-green  { color: #22C55E; }
+.c-pink   { color: #EC4899; }
+.c-yellow { color: #F59E0B; }
+
+/* ===== CONTROLS ===== */
+.controls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+.search-input {
+  padding: 9px 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font-size: 13px;
+  outline: none;
+  width: 240px;
+  transition: border-color 0.2s;
+}
+.search-input:focus { border-color: var(--accent); }
+.controls-right {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-size: 12px;
+  color: var(--text-sub);
+}
+.sort-select {
+  padding: 8px 12px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 10px;
+  color: var(--text-mid);
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+}
+.sort-select:focus { border-color: var(--accent); }
+
+/* ===== POST TABLE ===== */
+.table-wrap {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+thead th {
+  padding: 12px 14px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-sub);
+  letter-spacing: 0.5px;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface2);
+  white-space: nowrap;
+  cursor: pointer;
+  user-select: none;
+  transition: color 0.15s;
+}
+thead th:hover { color: var(--text); }
+thead th.sorted { color: var(--accent); }
+thead th .sort-icon { margin-left: 4px; opacity: 0.5; }
+thead th.sorted .sort-icon { opacity: 1; }
+
+tbody tr {
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+tbody tr:last-child { border-bottom: none; }
+tbody tr:hover { background: rgba(168,85,247,0.05); }
+
+td {
+  padding: 12px 14px;
+  vertical-align: top;
+}
+td.date-col {
+  font-size: 12px;
+  color: var(--text-sub);
+  white-space: nowrap;
+  width: 80px;
+}
+td.text-col {
+  max-width: 340px;
+}
+.post-text {
+  font-size: 13px;
+  color: var(--text);
+  white-space: pre-wrap;
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  cursor: pointer;
+}
+.post-text.expanded {
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+.expand-btn {
+  font-size: 11px;
+  color: var(--accent);
+  cursor: pointer;
+  margin-top: 4px;
+  display: inline-block;
+}
+td.num-col {
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.num-big {
+  font-size: 15px;
+  font-weight: 700;
+}
+.num-label {
+  font-size: 10px;
+  color: var(--text-sub);
+  margin-top: 1px;
+}
+.eng-badge {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 700;
+}
+.eng-high   { background: rgba(34,197,94,0.15);  color: #22C55E; }
+.eng-mid    { background: rgba(245,158,11,0.15); color: #F59E0B; }
+.eng-low    { background: rgba(239,68,68,0.1);   color: #EF4444; }
+.eng-zero   { background: rgba(100,100,100,0.1); color: var(--text-sub); }
+
+.url-link {
+  font-size: 11px;
+  color: var(--text-sub);
+  text-decoration: none;
+  display: inline-block;
+  margin-top: 4px;
+  opacity: 0.6;
+  transition: opacity 0.15s;
+}
+.url-link:hover { opacity: 1; color: var(--accent); }
+
+.empty-state {
+  text-align: center;
+  padding: 60px 24px;
+  color: var(--text-sub);
+  font-size: 14px;
+}
+
+/* ===== FOOTER ===== */
+.footer {
+  text-align: center;
+  padding: 32px 24px;
+  font-size: 11px;
+  color: var(--text-sub);
+}
+
+/* ===== SCROLLBAR ===== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #444; }
+
+@media (max-width: 700px) {
+  .topbar { padding: 12px 16px; }
+  .main { padding: 16px; }
+  .summary-grid { grid-template-columns: repeat(2, 1fr); }
+  .search-input { width: 100%; }
+  .controls { flex-direction: column; align-items: stretch; }
+  .controls-right { margin-left: 0; }
+  .table-wrap { border-radius: 12px; overflow-x: auto; }
+  table { min-width: 680px; }
+}
+</style>
+</head>
+<body>
+
+<!-- ===== TOKEN SCREEN ===== -->
+<div id="tokenScreen" class="screen active">
+  <div class="token-card">
+    <div class="token-logo">Threads 分析</div>
+    <div class="token-sub">アクセストークンを入力して投稿データを取得します</div>
+
+    <div class="token-label">ACCESS TOKEN</div>
+    <div class="token-input-wrap">
+      <input type="password" id="tokenInput" placeholder="THQVJ..." autocomplete="off">
+      <button class="token-toggle" id="tokenToggle" title="表示切替">👁</button>
+    </div>
+
+    <label class="token-save-row">
+      <input type="checkbox" id="saveToken" checked>
+      トークンをブラウザに保存する（localStorage）
+    </label>
+
+    <div class="token-label">取得件数</div>
+    <div class="limit-row">
+      <button class="limit-btn active" data-limit="50">直近50件</button>
+      <button class="limit-btn" data-limit="100">直近100件</button>
+      <button class="limit-btn" data-limit="0">全件</button>
+    </div>
+
+    <button class="btn-primary" id="fetchBtn" onclick="startFetch()">データを取得する</button>
+    <div class="token-error" id="tokenError"></div>
+  </div>
+</div>
+
+<!-- ===== LOADING SCREEN ===== -->
+<div id="loadingScreen" class="screen">
+  <div class="loading-dots">
+    <span></span><span></span><span></span>
+  </div>
+  <div class="loading-title" id="loadingTitle">投稿データを取得中...</div>
+  <div class="progress-bar-wrap">
+    <div class="progress-bar" id="progressBar"></div>
+  </div>
+  <div class="loading-sub" id="loadingSub"></div>
+</div>
+
+<!-- ===== DASHBOARD SCREEN ===== -->
+<div id="dashboardScreen" class="screen">
+  <div class="topbar">
+    <div class="topbar-logo">Threads 分析</div>
+    <div class="topbar-right">
+      <div class="topbar-info" id="topbarInfo"></div>
+      <button class="btn-logout" onclick="logout()">ログアウト</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Summary -->
+    <div class="summary-grid" id="summaryGrid"></div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <input type="text" class="search-input" id="searchInput"
+             placeholder="投稿内容を検索..."
+             oninput="renderTable()">
+      <div class="controls-right">
+        <span id="countLabel"></span>
+        <select class="sort-select" id="sortSelect" onchange="renderTable()">
+          <option value="date_desc">新しい順</option>
+          <option value="date_asc">古い順</option>
+          <option value="views_desc">閲覧数 多い順</option>
+          <option value="likes_desc">いいね 多い順</option>
+          <option value="replies_desc">コメント 多い順</option>
+          <option value="reposts_desc">リポスト 多い順</option>
+          <option value="eng_desc">エンゲージメント率 高い順</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="setSortCol('date')">日時 <span class="sort-icon" id="sh_date"></span></th>
+            <th>投稿内容</th>
+            <th onclick="setSortCol('views')" class="num-col">閲覧数 <span class="sort-icon" id="sh_views"></span></th>
+            <th onclick="setSortCol('likes')" class="num-col">いいね <span class="sort-icon" id="sh_likes"></span></th>
+            <th onclick="setSortCol('replies')" class="num-col">コメント <span class="sort-icon" id="sh_replies"></span></th>
+            <th onclick="setSortCol('reposts')" class="num-col">リポスト <span class="sort-icon" id="sh_reposts"></span></th>
+            <th onclick="setSortCol('eng')" class="num-col">ENG率 <span class="sort-icon" id="sh_eng"></span></th>
+          </tr>
+        </thead>
+        <tbody id="postTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <div class="footer">取得日時: <span id="fetchedAt"></span></div>
+</div>
+
+<script>
+const API_BASE = "https://graph.threads.net/v1.0";
+let allPosts = [];
+let selectedLimit = 50;
+
+// ===== INIT =====
+(function init() {
+  const saved = localStorage.getItem("threads_token");
+  if (saved) {
+    document.getElementById("tokenInput").value = saved;
+  }
+
+  document.getElementById("tokenToggle").addEventListener("click", () => {
+    const inp = document.getElementById("tokenInput");
+    inp.type = inp.type === "password" ? "text" : "password";
+  });
+
+  document.querySelectorAll(".limit-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      document.querySelectorAll(".limit-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      selectedLimit = parseInt(btn.dataset.limit);
+    });
+  });
+
+  document.getElementById("tokenInput").addEventListener("keydown", e => {
+    if (e.key === "Enter") startFetch();
+  });
+})();
+
+// ===== SCREENS =====
+function showScreen(id) {
+  document.querySelectorAll(".screen").forEach(s => s.classList.remove("active"));
+  document.getElementById(id).classList.add("active");
+}
+
+function setLoading(title, sub, pct) {
+  document.getElementById("loadingTitle").textContent = title;
+  document.getElementById("loadingSub").textContent = sub || "";
+  document.getElementById("progressBar").style.width = pct + "%";
+}
+
+// ===== FETCH =====
+async function startFetch() {
+  const token = document.getElementById("tokenInput").value.trim();
+  if (!token) {
+    document.getElementById("tokenError").textContent = "トークンを入力してください";
+    return;
+  }
+  document.getElementById("tokenError").textContent = "";
+  document.getElementById("fetchBtn").disabled = true;
+
+  if (document.getElementById("saveToken").checked) {
+    localStorage.setItem("threads_token", token);
+  } else {
+    localStorage.removeItem("threads_token");
+  }
+
+  showScreen("loadingScreen");
+  setLoading("投稿リストを取得中...", "", 5);
+
+  try {
+    // Step 1: fetch posts
+    let posts = [];
+    let nextUrl = `${API_BASE}/me/threads?fields=id,text,timestamp,permalink&limit=100&access_token=${token}`;
+    while (nextUrl) {
+      const res = await fetchJSON(nextUrl);
+      if (res.error) throw new Error(res.error.message || "APIエラー");
+      if (res.data) posts = posts.concat(res.data);
+      nextUrl = res.paging?.next || null;
+      if (selectedLimit > 0 && posts.length >= selectedLimit) break;
+    }
+    if (selectedLimit > 0) posts = posts.slice(0, selectedLimit);
+    posts.reverse(); // 新しい順
+
+    setLoading(`インサイト取得中 (0/${posts.length})`, "しばらくお待ちください...", 10);
+
+    // Step 2: fetch insights per post
+    const result = [];
+    for (let i = 0; i < posts.length; i++) {
+      const post = posts[i];
+      const pct = 10 + Math.floor((i / posts.length) * 85);
+      setLoading(`インサイト取得中 (${i+1}/${posts.length})`, post.text ? post.text.slice(0, 40) + "..." : "", pct);
+
+      let views = 0, likes = 0, replies = 0, reposts = 0;
+      try {
+        const ins = await fetchJSON(
+          `${API_BASE}/${post.id}/insights?metric=views,likes,replies,reposts&access_token=${token}`
+        );
+        if (ins.data) {
+          for (const m of ins.data) {
+            if (m.name === "views")   views   = m.values?.[0]?.value ?? m.total_value?.value ?? 0;
+            if (m.name === "likes")   likes   = m.values?.[0]?.value ?? m.total_value?.value ?? 0;
+            if (m.name === "replies") replies = m.values?.[0]?.value ?? m.total_value?.value ?? 0;
+            if (m.name === "reposts") reposts = m.values?.[0]?.value ?? m.total_value?.value ?? 0;
+          }
+        }
+      } catch(e) { /* insight取得失敗は無視して続行 */ }
+
+      const engRate = views > 0 ? (likes + replies + reposts) / views * 100 : 0;
+      const ts = new Date(post.timestamp);
+      result.push({
+        id: post.id,
+        date: ts,
+        dateStr: formatDate(ts),
+        text: post.text || "",
+        permalink: post.permalink || `https://www.threads.net/post/${post.id}`,
+        views, likes, replies, reposts,
+        engRate: parseFloat(engRate.toFixed(2))
+      });
+
+      // 少し間隔を空ける（レート制限対策）
+      if (i < posts.length - 1) await sleep(150);
+    }
+
+    setLoading("集計中...", "", 98);
+    allPosts = result;
+    renderDashboard(token);
+    showScreen("dashboardScreen");
+
+  } catch(err) {
+    showScreen("tokenScreen");
+    document.getElementById("tokenError").textContent = "エラー: " + err.message;
+  } finally {
+    document.getElementById("fetchBtn").disabled = false;
+  }
+}
+
+// ===== RENDER DASHBOARD =====
+function renderDashboard(token) {
+  // topbar info
+  document.getElementById("topbarInfo").textContent = `${allPosts.length}件取得`;
+  document.getElementById("fetchedAt").textContent = new Date().toLocaleString("ja-JP");
+
+  // summary cards
+  const totalViews    = allPosts.reduce((s, p) => s + p.views, 0);
+  const totalLikes    = allPosts.reduce((s, p) => s + p.likes, 0);
+  const totalReplies  = allPosts.reduce((s, p) => s + p.replies, 0);
+  const totalReposts  = allPosts.reduce((s, p) => s + p.reposts, 0);
+  const avgEng        = allPosts.filter(p => p.views > 0).length > 0
+    ? allPosts.filter(p => p.views > 0).reduce((s, p) => s + p.engRate, 0) /
+      allPosts.filter(p => p.views > 0).length
+    : 0;
+  const maxViews      = Math.max(...allPosts.map(p => p.views), 0);
+
+  document.getElementById("summaryGrid").innerHTML = `
+    <div class="summary-card">
+      <div class="summary-label">投稿数</div>
+      <div class="summary-value c-purple">${allPosts.length.toLocaleString()}</div>
+      <div class="summary-sub">取得した投稿の合計</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">総閲覧数</div>
+      <div class="summary-value c-blue">${fmtNum(totalViews)}</div>
+      <div class="summary-sub">最大 ${fmtNum(maxViews)} / 投稿</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">総いいね数</div>
+      <div class="summary-value c-pink">${fmtNum(totalLikes)}</div>
+      <div class="summary-sub">平均 ${(totalLikes / (allPosts.length||1)).toFixed(1)} / 投稿</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">総コメント数</div>
+      <div class="summary-value c-green">${fmtNum(totalReplies)}</div>
+      <div class="summary-sub">平均 ${(totalReplies / (allPosts.length||1)).toFixed(1)} / 投稿</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">総リポスト数</div>
+      <div class="summary-value c-yellow">${fmtNum(totalReposts)}</div>
+      <div class="summary-sub">平均 ${(totalReposts / (allPosts.length||1)).toFixed(1)} / 投稿</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-label">平均ENG率</div>
+      <div class="summary-value ${avgEng >= 3 ? 'c-green' : avgEng >= 1 ? 'c-yellow' : 'c-red'}">${avgEng.toFixed(2)}%</div>
+      <div class="summary-sub">閲覧数ありの投稿のみ</div>
+    </div>
+  `;
+
+  renderTable();
+}
+
+// ===== RENDER TABLE =====
+let sortCol = "date";
+let sortDir = "desc";
+
+function setSortCol(col) {
+  if (sortCol === col) {
+    sortDir = sortDir === "desc" ? "asc" : "desc";
+  } else {
+    sortCol = col;
+    sortDir = "desc";
+  }
+  // sync select
+  const map = { date: sortDir === "desc" ? "date_desc" : "date_asc" };
+  document.getElementById("sortSelect").value = map[col] || `${col}_desc`;
+  renderTable();
+}
+
+function renderTable() {
+  // sync sortCol/sortDir from select
+  const sel = document.getElementById("sortSelect").value;
+  const [sc, sd] = sel.split("_");
+  sortCol = sc; sortDir = sd;
+
+  // update header indicators
+  ["date","views","likes","replies","reposts","eng"].forEach(c => {
+    const el = document.getElementById("sh_" + c);
+    const th = el?.parentElement;
+    if (!el) return;
+    if (sortCol === c) {
+      el.textContent = sortDir === "desc" ? "↓" : "↑";
+      th?.classList.add("sorted");
+    } else {
+      el.textContent = "↕";
+      th?.classList.remove("sorted");
+    }
+  });
+
+  const query = document.getElementById("searchInput").value.toLowerCase();
+
+  let filtered = allPosts.filter(p =>
+    !query || p.text.toLowerCase().includes(query)
+  );
+
+  filtered.sort((a, b) => {
+    let va, vb;
+    switch(sortCol) {
+      case "date":    va = a.date.getTime(); vb = b.date.getTime(); break;
+      case "views":   va = a.views;   vb = b.views;   break;
+      case "likes":   va = a.likes;   vb = b.likes;   break;
+      case "replies": va = a.replies; vb = b.replies; break;
+      case "reposts": va = a.reposts; vb = b.reposts; break;
+      case "eng":     va = a.engRate; vb = b.engRate; break;
+      default:        va = a.date.getTime(); vb = b.date.getTime();
+    }
+    return sortDir === "desc" ? vb - va : va - vb;
+  });
+
+  document.getElementById("countLabel").textContent = `${filtered.length}件表示`;
+
+  const tbody = document.getElementById("postTableBody");
+  if (filtered.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="7" class="empty-state">該当する投稿がありません</td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = filtered.map((p, idx) => {
+    const engClass = p.engRate >= 5 ? "eng-high" : p.engRate >= 2 ? "eng-mid" : p.engRate > 0 ? "eng-low" : "eng-zero";
+    const textPreview = escHtml(p.text);
+    const id = `pt_${idx}`;
+    return `
+      <tr>
+        <td class="date-col">${p.dateStr}</td>
+        <td class="text-col">
+          <div class="post-text" id="${id}" onclick="toggleExpand('${id}')">${textPreview}</div>
+          <span class="expand-btn" onclick="toggleExpand('${id}')">もっと見る</span>
+          <br><a class="url-link" href="${p.permalink}" target="_blank" rel="noopener">↗ 投稿を開く</a>
+        </td>
+        <td class="num-col">
+          <div class="num-big c-blue">${fmtNum(p.views)}</div>
+        </td>
+        <td class="num-col">
+          <div class="num-big c-pink">${fmtNum(p.likes)}</div>
+        </td>
+        <td class="num-col">
+          <div class="num-big c-green">${fmtNum(p.replies)}</div>
+        </td>
+        <td class="num-col">
+          <div class="num-big c-yellow">${fmtNum(p.reposts)}</div>
+        </td>
+        <td class="num-col">
+          <span class="eng-badge ${engClass}">${p.engRate.toFixed(2)}%</span>
+        </td>
+      </tr>
+    `;
+  }).join("");
+
+  // post-render: hide expand-btn for short texts
+  filtered.forEach((p, idx) => {
+    const el = document.getElementById(`pt_${idx}`);
+    if (!el) return;
+    const btn = el.nextElementSibling;
+    if (el.scrollHeight <= el.clientHeight + 2) btn.style.display = "none";
+  });
+}
+
+function toggleExpand(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const btn = el.nextElementSibling;
+  const expanded = el.classList.toggle("expanded");
+  btn.textContent = expanded ? "閉じる" : "もっと見る";
+}
+
+function logout() {
+  if (!confirm("ログアウトしますか？")) return;
+  allPosts = [];
+  showScreen("tokenScreen");
+}
+
+// ===== UTILS =====
+async function fetchJSON(url) {
+  const res = await fetch(url);
+  return res.json();
+}
+
+function sleep(ms) {
+  return new Promise(r => setTimeout(r, ms));
+}
+
+function formatDate(d) {
+  const m = d.getMonth() + 1;
+  const day = d.getDate();
+  const h = String(d.getHours()).padStart(2, "0");
+  const min = String(d.getMinutes()).padStart(2, "0");
+  return `${m}/${day}\n${h}:${min}`;
+}
+
+function fmtNum(n) {
+  if (n >= 10000) return (n / 10000).toFixed(1) + "万";
+  return n.toLocaleString();
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+</script>
+</body>
+</html>
